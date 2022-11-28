@@ -2,9 +2,9 @@
 
 module Decoder(
    input wire [`INS_WIDTH]code,
-   input wire [`ADDRESS_WIDTH] pc,
+   input wire [`ADDR_WIDTH] pc,
    output reg [`OPE_WIDTH] ins_type,
-   output reg [`ADDRESS_WIDTH] ins_pc,
+   output reg [`ADDR_WIDTH] ins_pc,
    output reg [`REG_NUMBER_WIDTH] ins_rd, ins_rs1, ins_rs2,
    output reg [`DATA_WIDTH] ins_imm
 );

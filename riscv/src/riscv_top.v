@@ -1,5 +1,8 @@
 // riscv top module file
 // modification allowed for debugging purposes
+`include "ram.v"
+`include "cpu.v"
+`include "hci.v"
 
 module riscv_top
 #(

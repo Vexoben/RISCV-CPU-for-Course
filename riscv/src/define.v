@@ -1,9 +1,18 @@
 // vector length
 `define OPE_WIDTH 5:0
 `define INS_WIDTH 31:0
-`define ADDRESS_WIDTH 31:0
+`define ADDR_WIDTH 17:0
 `define REG_NUMBER_WIDTH 5:0
 `define DATA_WIDTH 31:0
+`define MEM_WIDTH 7:0
+
+// instruction cache para
+`define TAG_RANGE 17:10
+`define INDEX_RANGE 9:2
+`define BLOCK_RANGE 1:0
+`define IC_INDEX_SIZE 255:0
+`define IC_BLOCK_SIZE 4
+`define ICACHE_SIZE 32
 
 // ins number
 `define empty_ins 6'd0
