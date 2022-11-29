@@ -6,16 +6,25 @@
 `define DATA_WIDTH 31:0
 `define MEM_WIDTH 7:0
 
-// instruction cache para
+// cpu para
+// instruction cache parameters
 `define TAG_RANGE 17:10
 `define INDEX_RANGE 9:2
 `define BLOCK_RANGE 1:0
-`define IC_INDEX_SIZE 255:0
 `define IC_BLOCK_SIZE 4
+`define IC_BLOCK_SIZE_ARR 1:0
 `define ICACHE_SIZE 32
+`define ICACHE_SIZE_ARR 4:0
+// instruction queue parameters
+`define IQ_SIZE 16
+`define IQ_SIZE_ARR 3:0
+// rob parameters
+`define ROB_SIZE 16
+`define ROB_SIZE_ARR 3:0
+
 
 // ins number
-`define empty_ins 6'd0
+`define EMPTY_INS 6'd0
 `define LUI 6'd1
 `define AUIPC 6'd2
 `define JAL 6'd3

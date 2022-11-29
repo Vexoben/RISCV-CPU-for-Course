@@ -4,9 +4,8 @@ module Decoder(
    input wire [`INS_WIDTH]code,
    input wire [`ADDR_WIDTH] pc,
    output reg [`OPE_WIDTH] ins_type,
-   output reg [`ADDR_WIDTH] ins_pc,
-   output reg [`REG_NUMBER_WIDTH] ins_rd, ins_rs1, ins_rs2,
-   output reg [`DATA_WIDTH] ins_imm
+   output reg [`REG_NUMBER_WIDTH] ins_rd, ins_rs1, ins_rs2,    // reg destination, reg source1, reg source2
+   output reg [`DATA_WIDTH] ins_imm                            // ins immediate
 );
 
 function [`INS_WIDTH] signed_extend;
@@ -16,8 +15,7 @@ function [`INS_WIDTH] signed_extend;
 endfunction
 
 always @(*) begin
-   ins_type = `empty_ins;
-   ins_pc = pc;
+   ins_type = `EMPTY_INS;
    ins_rd = (code >> 7) & 12'h1F;
    ins_rs1 = code >> 15 & 12'h1F;
    ins_rs2 = code >> 20 & 12'h1F;
