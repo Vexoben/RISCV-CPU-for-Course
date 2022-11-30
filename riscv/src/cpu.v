@@ -28,6 +28,8 @@ module cpu(
 // - 0x30004 read: read clocks passed since cpu starts (in dword, 4 bytes)
 // - 0x30004 write: indicates program stop (will output '\0' through uart tx)
 
+wire full_any_component = full_rob || full_rs || full_lsb;
+
 
 
 endmodule

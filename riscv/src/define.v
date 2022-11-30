@@ -2,6 +2,7 @@
 `define OPE_WIDTH 5:0
 `define INS_WIDTH 31:0
 `define ADDR_WIDTH 17:0
+`define REG_NUMBER 32
 `define REG_NUMBER_WIDTH 5:0
 `define DATA_WIDTH 31:0
 `define MEM_WIDTH 7:0
@@ -12,16 +13,22 @@
 `define INDEX_RANGE 9:2
 `define BLOCK_RANGE 1:0
 `define IC_BLOCK_SIZE 4
-`define IC_BLOCK_SIZE_ARR 1:0
+`define IC_BLOCK_SIZE_ARR 3:0
 `define ICACHE_SIZE 32
-`define ICACHE_SIZE_ARR 4:0
+`define ICACHE_SIZE_ARR 15:0
 // instruction queue parameters
 `define IQ_SIZE 16
 `define IQ_SIZE_ARR 3:0
 // rob parameters
 `define ROB_SIZE 16
-`define ROB_SIZE_ARR 3:0
-
+`define ROB_SIZE_ARR 15:0
+`define ROB_ID_TYPE 3:0
+`define NON_DEPENDENT 16
+`define RS_SIZE 16
+`define RS_SIZE_ARR 15:0
+`define LSB_SIZE 16
+`define LSB_SIZE_ARR 15:0
+`define LSB_ID_TYPE 3:0
 
 // ins number
 `define EMPTY_INS 6'd0
@@ -44,14 +51,14 @@
 `define SH 6'd17
 `define SW 6'd18
 `define ADDI 6'd19
-`define SLLI 6'd20
-`define SLTI 6'd21
-`define SLTIU 6'd22
-`define XORI 6'd23
-`define SRLI 6'd24
-`define SRAI 6'd25
-`define ORI 6'd26
-`define ANDI 6'd27
+`define SLTI 6'd20
+`define SLTIU 6'd21
+`define XORI 6'd22
+`define ORI 6'd23
+`define ANDI 6'd24
+`define SLLI 6'd25
+`define SRLI 6'd26
+`define SRAI 6'd27
 `define ADD 6'd28
 `define SUB 6'd29
 `define SLL 6'd30
