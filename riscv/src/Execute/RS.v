@@ -22,6 +22,8 @@ module RS(
    output reg enable_cdb_rs,
    output reg [`ROB_SIZE_ARR] cdb_rs_rob_id,
    output reg [`DATA_WIDTH] cdb_rs_value,
+   output reg cdb_rs_jump,
+   output reg [`ADDR_WIDTH ]cdb_rs_pc_next,
    
    // interact with rob
    input wire mispredict,

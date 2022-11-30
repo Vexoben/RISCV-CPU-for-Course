@@ -4,6 +4,7 @@
 `define ADDR_WIDTH 17:0
 `define REG_NUMBER 32
 `define REG_NUMBER_WIDTH 5:0
+`define REG_SIZE_ARR 31:0
 `define DATA_WIDTH 31:0
 `define MEM_WIDTH 7:0
 

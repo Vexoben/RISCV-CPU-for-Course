@@ -54,6 +54,7 @@ module Dispatcher(
    output reg enable_to_rob,
    output reg predict_jump_to_rob,
    output reg [`ADDR_WIDTH] pc_to_rob,
+   output reg [`OPE_WIDTH] type_to_rob,
    output reg [`ADDR_WIDTH] pred_pc_to_rob,
    output reg [`REG_NUMBER_WIDTH] rd_to_rob,
 
@@ -116,6 +117,7 @@ always @(posedge clk) begin
       predict_jump_to_rob <= predict_jump_from_if;
       pred_pc_to_rob <= pred_pc_from_if;
       rd_to_rob <= ins_rd;
+      type_to_rob <= ins_type;
       // reg
       
       // rs
