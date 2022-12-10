@@ -10,10 +10,11 @@ module RS(
    input wire enable_from_dsp,
    input wire [`ADDR_WIDTH] pc_from_dsp,
    input wire [`DATA_WIDTH] Vj_from_dsp, Vk_from_dsp,
-   input wire [`ROB_SIZE_ARR] Qj_from_dsp, Qk_from_dsp,
+   input wire [`ROB_ID_TYPE] Qj_from_dsp, Qk_from_dsp, rob_id_from_dsp,
    input wire [`OPE_WIDTH] type_from_dsp,
    input wire [`REG_NUMBER_WIDTH] rd_from_dsp, rs1_from_dsp, rs2_from_dsp,
    input wire [`DATA_WIDTH] imm_from_dsp,
+   output reg ok_to_dsp,
 
    // interact with cdb
    input wire enable_cdb_lsb,
@@ -23,7 +24,7 @@ module RS(
    output reg [`ROB_SIZE_ARR] cdb_rs_rob_id,
    output reg [`DATA_WIDTH] cdb_rs_value,
    output reg cdb_rs_jump,
-   output reg [`ADDR_WIDTH ]cdb_rs_pc_next,
+   output reg [`ADDR_WIDTH ] cdb_rs_pc_next,
    
    // interact with rob
    input wire mispredict,
@@ -52,7 +53,7 @@ assign real_Vk = (enable_cdb_rs && cdb_rs_rob_id == Qk_from_dsp) ? cdb_rs_value 
 assign free = !busy[0] ? 0 : !busy[1] ? 1 : !busy[2] ? 2 : !busy[3] ? 3 :
               !busy[4] ? 4 : !busy[5] ? 5 : !busy[6] ? 6 : !busy[7] ? 7 :
               !busy[8] ? 8 : !busy[9] ? 9 : !busy[10] ? 10 : !busy[11] ? 11 :
-              !busy[12] ? 12 : !busy[13] ? 13 : !busy[14] ? 14 : !busy[15] ? 15 : 16;
+              !busy[12] ? 12 : !busy[13] ? 13 : !busy[14] ? 14 : !busy[15] ? 15 : `RS_SIZE;
 assign ready_Q[0] = Qj[0] == `NON_DEPENDENT && Qk[0] == `NON_DEPENDENT && busy[0];
 assign ready_Q[1] = Qj[1] == `NON_DEPENDENT && Qk[1] == `NON_DEPENDENT && busy[1];
 assign ready_Q[2] = Qj[2] == `NON_DEPENDENT && Qk[2] == `NON_DEPENDENT && busy[2];
@@ -72,7 +73,7 @@ assign ready_Q[15] = Qj[15] == `NON_DEPENDENT && Qk[15] == `NON_DEPENDENT && bus
 assign ready = ready_Q[0] ? 0 : ready_Q[1] ? 1 : ready_Q[2] ? 2 : ready_Q[3] ? 3 :
                ready_Q[4] ? 4 : ready_Q[5] ? 5 : ready_Q[6] ? 6 : ready_Q[7] ? 7 :
                ready_Q[8] ? 8 : ready_Q[9] ? 9 : ready_Q[10] ? 10 : ready_Q[11] ? 11 :
-               ready_Q[12] ? 12 : ready_Q[13] ? 13 : ready_Q[14] ? 14 : ready_Q[15] ? 15 : 16;
+               ready_Q[12] ? 12 : ready_Q[13] ? 13 : ready_Q[14] ? 14 : ready_Q[15] ? 15 : `RS_SIZE;
                
 reg [`DATA_WIDTH] result;
 reg [`ADDR_WIDTH] pc_next;
@@ -95,7 +96,7 @@ always @(posedge clk) begin
       // do nothing
    end
    else begin
-      if (enable_from_dsp) begin
+      if (enable_from_dsp && free != `RS_SIZE) begin
          Vj[free] <= real_Vj;
          Vk[free] <= real_Vk;
          Qj[free] <= real_Qj;
@@ -103,9 +104,21 @@ always @(posedge clk) begin
          type[free] <= type_from_dsp;
          imm[free] <= imm_from_dsp;
          busy[free] <= 1;
+         rob_id[free] <= rob_id_from_dsp;
+         ok_to_dsp <= 1;
       end
-      if (ready == `RS_SIZE) begin
-         // do nothing
+      else begin
+         ok_to_dsp <= 0;
+      end
+      if (ready != `RS_SIZE) begin
+         enable_cdb_rs <= 1;
+         cdb_rs_rob_id <= rob_id[ready];
+         cdb_rs_value <= result;
+         cdb_rs_jump <= if_jump;
+         cdb_rs_pc_next <= pc_next;
+      end
+      else if (enable_cdb_rs == 1) begin
+         enable_cdb_rs <= 0;
       end
    end
 end
@@ -135,27 +148,27 @@ always @(*) begin
          result = pc[ready] + 4;
       end
       `BEQ       : begin           // Branch if Equal
-         pc_next = pc[ready] + imm[ready];
+         pc_next = pc[ready] + (Vj[ready] == Vk[ready]) ? imm[ready] : 4;
          if_jump = Vj[ready] == Vk[ready];
       end
       `BNE       : begin           // Branch if Not Equal
-         pc_next = pc[ready] + imm[ready];
+         pc_next = pc[ready] + (Vj[ready] == Vk[ready]) ? imm[ready] : 4;
          if_jump = Vj[ready] != Vk[ready];
       end
       `BLT       : begin           // Branch if Less Than
-         pc_next = pc[ready] + imm[ready];
+         pc_next = pc[ready] + (Vj[ready] == Vk[ready]) ? imm[ready] : 4;
          if_jump = $signed(Vj[ready]) <= $signed(Vk[ready]);        
       end
       `BGE       : begin           // Branch if Greater Than or Equal
-         pc_next = pc[ready] + imm[ready];
+         pc_next = pc[ready] + (Vj[ready] == Vk[ready]) ? imm[ready] : 4;
          if_jump = $signed(Vj[ready]) >= $signed(Vk[ready]);
       end
       `BLTU      : begin           // Branch if Less Than, Unsigned
-         pc_next = pc[ready] + imm[ready];
+         pc_next = pc[ready] + (Vj[ready] == Vk[ready]) ? imm[ready] : 4;
          if_jump = Vj[ready] < Vk[ready];
       end
       `BGEU      : begin           // Branch if Greater Than or Equal, Unsigned
-         pc_next = pc[ready] + imm[ready];
+         pc_next = pc[ready] + (Vj[ready] == Vk[ready]) ? imm[ready] : 4;
          if_jump = Vj[ready] >= Vk[ready];         
       end
       `ADDI      : begin           // Add Immediate
