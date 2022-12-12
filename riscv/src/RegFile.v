@@ -14,7 +14,8 @@ module RegFile(
 
    // interact with dispatcher
    input wire enable_from_dsp,
-   input wire [`REG_NUMBER_WIDTH] rs1_from_dsp, rs2_from_dsp, rd_from_dsp,
+   input wire [`EX_REG_NUMBER_WIDTH] rs1_from_dsp, rs2_from_dsp,
+   input wire [`REG_NUMBER_WIDTH] rd_from_dsp,
    input wire [`ROB_ID_TYPE] Q_from_dsp,
    output wire [`DATA_WIDTH] Vj_to_dsp, Vk_to_dsp,
    output wire [`ROB_ID_TYPE] Qj_to_dsp, Qk_to_dsp,
@@ -23,16 +24,17 @@ module RegFile(
    input wire mispredict,
    input wire enable_from_rob,
    input wire [`REG_NUMBER_WIDTH] rd_from_rob,
-   input wire [`ROB_ID_TYPE] Q_from_rob, V_from_rob
+   input wire [`ROB_ID_TYPE] Q_from_rob,
+   input wire [`DATA_WIDTH] V_from_rob
 );
 
 reg [`DATA_WIDTH] V[`REG_SIZE_ARR];
 reg [`ROB_ID_TYPE] Q[`REG_SIZE_ARR];
 
-assign Qj_to_dsp = mispredict ? `NON_DEPENDENT : (enable_from_rob && rd_from_rob == rs1_from_dsp && Q_from_rob == Q[rs1_from_dsp]) ? `NON_DEPENDENT : Q[rs1_from_dsp];
-assign Qk_to_dsp = mispredict ? `NON_DEPENDENT : (enable_from_rob && rd_from_rob == rs2_from_dsp && Q_from_rob == Q[rs2_from_dsp]) ? `NON_DEPENDENT : Q[rs2_from_dsp];
-assign Vj_to_dsp = mispredict ? V[rs1_from_dsp] : (enable_from_rob && rd_from_rob == rs1_from_dsp && Q_from_rob == Q[rs1_from_dsp]) ? V_from_rob : V[rs1_from_dsp];
-assign Vk_to_dsp = mispredict ? V[rs2_from_dsp] : (enable_from_rob && rd_from_rob == rs2_from_dsp && Q_from_rob == Q[rs2_from_dsp]) ? V_from_rob : V[rs2_from_dsp];
+assign Qj_to_dsp = (mispredict || rs1_from_dsp == `REG_NUMBER) ? `NON_DEPENDENT : (enable_from_rob && rd_from_rob == rs1_from_dsp && Q_from_rob == Q[rs1_from_dsp]) ? `NON_DEPENDENT : Q[rs1_from_dsp];
+assign Qk_to_dsp = (mispredict || rs2_from_dsp == `REG_NUMBER) ? `NON_DEPENDENT : (enable_from_rob && rd_from_rob == rs2_from_dsp && Q_from_rob == Q[rs2_from_dsp]) ? `NON_DEPENDENT : Q[rs2_from_dsp];
+assign Vj_to_dsp = rs1_from_dsp == `REG_NUMBER ? 0 : mispredict ? V[rs1_from_dsp] : (enable_from_rob && rd_from_rob == rs1_from_dsp && Q_from_rob == Q[rs1_from_dsp]) ? V_from_rob : V[rs1_from_dsp];
+assign Vk_to_dsp = rs2_from_dsp == `REG_NUMBER ? 0 : mispredict ? V[rs2_from_dsp] : (enable_from_rob && rd_from_rob == rs2_from_dsp && Q_from_rob == Q[rs2_from_dsp]) ? V_from_rob : V[rs2_from_dsp];
 
 always @(posedge clk) begin
    if (rst) begin

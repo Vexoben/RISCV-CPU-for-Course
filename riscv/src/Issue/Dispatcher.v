@@ -26,8 +26,8 @@ module Dispatcher(
    input wire [`ROB_ID_TYPE] Qj_from_reg, Qk_from_reg,
    output reg enable_to_reg,
    output wire [`REG_NUMBER_WIDTH] rs1_to_reg, rs2_to_reg,
-   output wire [`REG_NUMBER_WIDTH] rd_to_reg,
-   output wire [`ROB_ID_TYPE] rob_id_to_reg, // renaming
+   output reg [`REG_NUMBER_WIDTH] rd_to_reg,
+   output reg [`ROB_ID_TYPE] rob_id_to_reg, // renaming
    input wire [`DATA_WIDTH] Vj_from_rob, Vk_from_rob,
    input wire Qj_ready_from_rob, Qk_ready_from_rob,
    output wire [`ROB_ID_TYPE] Qj_to_rob, Qk_to_rob,
@@ -37,8 +37,8 @@ module Dispatcher(
    output reg [`DATA_WIDTH] Vj_to_rs, Vk_to_rs,
    output reg [`ROB_ID_TYPE] Qj_to_rs, Qk_to_rs,
    output reg [`OPE_WIDTH] type_to_rs,
-   output reg [`REG_NUMBER_WIDTH] rd_to_rs, rs1_to_rs, rs2_to_rs,
    output reg [`DATA_WIDTH] imm_to_rs,
+   output reg [`ROB_ID_TYPE] rob_id_to_rs,
    output reg [`ADDR_WIDTH] pc_to_rs,
 
    // interact with LSB
@@ -46,26 +46,30 @@ module Dispatcher(
    output reg [`DATA_WIDTH] Vj_to_lsb, Vk_to_lsb,
    output reg [`ROB_ID_TYPE] Qj_to_lsb, Qk_to_lsb,
    output reg [`OPE_WIDTH] type_to_lsb,
-   output reg [`REG_NUMBER_WIDTH] rd_to_lsb, rs1_to_lsb, rs2_to_lsb,
+   output reg [`ROB_ID_TYPE] rob_id_to_lsb,
    output reg [`DATA_WIDTH] imm_to_lsb,
 
    // interact with ROB
    input wire mispredict,
-   input wire [`ROB_SIZE_ARR] rob_id,   
+   input wire [`ROB_ID_TYPE] rob_id,   
    output reg enable_to_rob,
    output reg predict_jump_to_rob,
    output reg [`ADDR_WIDTH] pc_to_rob,
    output reg [`OPE_WIDTH] type_to_rob,
    output reg [`ADDR_WIDTH] pred_pc_to_rob,
    output reg [`REG_NUMBER_WIDTH] rd_to_rob,
+   output reg [`INS_WIDTH] code_to_rob,
 
    // interact with cdb
    input wire enable_cdb_rs,
-   input wire [`ROB_SIZE_ARR] cdb_rs_rob_id,
+   input wire [`ROB_ID_TYPE] cdb_rs_rob_id,
    input wire [`DATA_WIDTH] cdb_rs_value,
    input wire enable_cdb_lsb,
-   input wire [`ROB_SIZE_ARR] cdb_lsb_rob_id,
-   input wire [`DATA_WIDTH] cdb_lsb_value
+   input wire [`ROB_ID_TYPE] cdb_lsb_rob_id,
+   input wire [`DATA_WIDTH] cdb_lsb_value,
+
+   // global
+   input wire full_any_component            // lsb, rs or rob is full
 );
 
 wire is_load;
@@ -103,15 +107,12 @@ assign Qj_to_rob = Qj;
 assign Qk_to_rob = Qk;
 assign rs1_to_reg = ins_rs1;
 assign rs2_to_reg = ins_rs2;
-assign rd_to_reg = ins_rd;
 assign code_to_decoder = ins_from_if;
 assign pc_to_decoder = pc_from_if;
 
 parameter
 STALL = 0,
-SEND_TO_RS = 1,
-SEND_TO_LSB = 2,
-RECIEVE_FROM_IF = 3;
+RECIEVE_FROM_IF = 1;
 
 reg[2:0] work_statu;
 
@@ -128,11 +129,15 @@ always @(posedge clk) begin
       // do nothing
    end
    else begin
-      if (work_statu == SEND_TO_RS) begin
-         if (ok_from_rs && ok_from_rob) work_statu <= STALL;
-      end
-      else if (work_statu == SEND_TO_LSB) begin
-         if (ok_from_lsb && ok_from_rob) work_statu <= STALL;
+      if (work_statu == STALL) begin
+         if (!full_any_component) begin
+            work_statu <= RECIEVE_FROM_IF;   
+            enable_to_if <= 1;
+         end
+         else enable_to_if <= 0;
+         enable_to_rs <= 0;
+         enable_to_lsb <= 0;
+         enable_to_rob <= 0;
       end
       else if (work_statu == RECIEVE_FROM_IF) begin
          if (enable_from_if) begin
@@ -144,47 +149,39 @@ always @(posedge clk) begin
             pred_pc_to_rob <= pred_pc_from_if;
             rd_to_rob <= ins_rd;
             type_to_rob <= ins_type;
+            code_to_rob <= ins_from_if;
             // reg
             enable_to_reg <= 1;
+            rd_to_reg <= ins_rd;
+            rob_id_to_reg <= rob_id;
             // rs
             Vj_to_rs <= Vj;
             Vk_to_rs <= Vk;
             Qj_to_rs <= Qj;
             Qk_to_rs <= Qk;
             type_to_rs <= ins_type;
-            rd_to_rs <= ins_rd;
-            rs1_to_rs <= ins_rs1;
-            rs2_to_rs <= ins_rs2;
             imm_to_rs <= ins_imm;
+            rob_id_to_rs <= rob_id;
             // lsb
             Vj_to_lsb <= Vj;
             Vk_to_lsb <= Vk;
             Qj_to_lsb <= Qj;
             Qk_to_lsb <= Qk;
             type_to_lsb <= ins_type;
-            rd_to_lsb <= ins_rd;
-            rs1_to_lsb <= ins_rs1;
-            rs2_to_lsb <= ins_rs2;
             imm_to_lsb <= ins_imm;
+            rob_id_to_lsb <= rob_id;
 
             if (is_load || is_store) begin
                enable_to_rs <= 0;
                enable_to_lsb <= 1;
-               work_statu <= SEND_TO_LSB;
+               work_statu <= STALL;
             end
             else begin
                enable_to_rs <= 1;
                enable_to_lsb <= 0;
-               work_statu <= SEND_TO_RS;
+               work_statu <= STALL;
             end
          end
-      end
-      else if (work_statu == STALL) begin
-         work_statu <= RECIEVE_FROM_IF;
-         enable_to_if <= 1;
-         enable_to_rs <= 0;
-         enable_to_lsb <= 0;
-         enable_to_rob <= 0;
       end
    end
 end

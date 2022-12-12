@@ -1,7 +1,7 @@
 `include "define.v"
 
 module Decoder(
-   input wire [`INS_WIDTH]code,
+   input wire [`INS_WIDTH] code,
    input wire [`ADDR_WIDTH] pc,
    output reg [`OPE_WIDTH] ins_type,
    output reg [`REG_NUMBER_WIDTH] ins_rd, ins_rs1, ins_rs2,    // reg destination, reg source1, reg source2
@@ -23,18 +23,25 @@ always @(*) begin
       12'h37: begin
          ins_type = `LUI;
          ins_imm = signed_extend(code >> 12, 20);
+         ins_rs1 = `REG_NUMBER;
+         ins_rs2 = `REG_NUMBER;
       end
       12'h17: begin
          ins_type = `AUIPC;
          ins_imm = signed_extend(code >> 12, 20);
+         ins_rs1 = `REG_NUMBER;
+         ins_rs2 = `REG_NUMBER;
       end
       12'h6F: begin
          ins_type = `JAL;
          ins_imm = signed_extend((code >> 31 & 1) << 20 | (code >> 21 & 12'h3FF) << 1 | (code >> 20 & 1) << 11 | (code >> 12 & 12'hFF) << 12, 21);
+         ins_rs1 = `REG_NUMBER;
+         ins_rs2 = `REG_NUMBER;
       end
       12'h67: begin
          ins_type = `JALR;
          ins_imm = signed_extend(code >> 20, 12);
+         ins_rs2 = `REG_NUMBER;
       end
       12'h63: begin
          ins_imm = signed_extend((code >> 8 & 12'hF) << 1 | (code >> 25 & 12'h3F) << 5 | (code >> 7 & 1) << 11 | (code >> 31 & 1) << 12, 13);
@@ -49,6 +56,7 @@ always @(*) begin
       end
       3: begin
          ins_imm = signed_extend(code >> 20, 12);
+         ins_rs2 = `REG_NUMBER;
          case (code >> 12 & 7) 
             0: ins_type = `LB;
             1: ins_type = `LH;
@@ -67,6 +75,7 @@ always @(*) begin
       end
       12'h13: begin
          ins_imm = signed_extend(code >> 20, 12);
+         ins_rs2 = `REG_NUMBER;
          case (code >> 12 & 7)
             0: ins_type = `ADDI;
             2: ins_type = `SLTI;
