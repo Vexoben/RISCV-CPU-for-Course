@@ -205,7 +205,7 @@ always @(posedge clk) begin
                0: begin
                   remain_step <= 7;
                   ok_to_lsb <= 0;
-                  signal_to_ram <= 0;
+                  if (addr_to_ram != 32'h30004) signal_to_ram <= 0;
                   work_statu <= STALL;
                end
             endcase            
