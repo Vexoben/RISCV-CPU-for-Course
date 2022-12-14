@@ -8,7 +8,7 @@ module Memctrl(
    // interact with ram
    input wire [7:0] data_from_ram,
    input wire uart_full_signal,
-   output reg signal_to_ram,             // read/write select (read: 1, write: 0)
+   output reg signal_to_ram,             // read/write select (read: 0, write: 1)
    output reg [7:0] data_to_ram,
    output reg [`MEM_WIDTH] addr_to_ram,
 
@@ -56,8 +56,7 @@ always @(posedge clk) begin
       if (work_statu == STALL) begin
          if (enable_from_lsb && (last_response == 0 || !enable_from_if)) begin
             enable_to_if <= 0;
-            signal_to_ram <= read_or_write;
-            work_statu = read_or_write ? READ_DATA : WRITE_DATA;
+            work_statu = read_or_write ? WRITE_DATA : READ_DATA;
             data_to_ram <= 0;
             addr_to_ram <= addr_from_lsb;
             remain_step <= 5;
@@ -111,10 +110,16 @@ always @(posedge clk) begin
          end
       end
       else if (work_statu == READ_DATA) begin
-         if (enable_from_lsb && read_or_write == 1) begin
+         if (enable_from_lsb && read_or_write == 0) begin
             case (remain_step)
+               5: begin
+                  remain_step <= 4;
+                  addr_to_ram <= addr_to_ram + 1;
+               end
                4: begin
+                  signal_to_ram <= 0;
                   data_to_lsb[7:0] <= data_from_ram;
+                  addr_to_ram <= addr_to_ram + 1;
                   if (width_from_lsb == 1) begin
                      ok_to_lsb <= 1;
                      remain_step <= 0;
@@ -123,6 +128,7 @@ always @(posedge clk) begin
                end 
                3: begin
                   data_to_lsb[15:8] <= data_from_ram;
+                  addr_to_ram <= addr_to_ram + 1;
                   if (width_from_lsb == 2) begin
                      ok_to_lsb <= 1;
                      remain_step <= 0;
@@ -131,6 +137,7 @@ always @(posedge clk) begin
                end 
                2: begin
                   data_to_lsb[23:16] <= data_from_ram;
+                  addr_to_ram <= addr_to_ram + 1;
                   if (width_from_lsb == 3) begin
                      ok_to_lsb <= 1;
                      remain_step <= 0;
@@ -140,6 +147,7 @@ always @(posedge clk) begin
                1: begin
                   ok_to_lsb <= 1;
                   data_to_lsb[31:24] <= data_from_ram;
+                  addr_to_ram <= addr_to_ram + 1;
                   remain_step <= 0;
                end
                0: begin
@@ -156,9 +164,13 @@ always @(posedge clk) begin
          end
       end
       else if (work_statu == WRITE_DATA) begin
-         if (enable_from_lsb && read_or_write == 0) begin
+         if (enable_from_lsb && read_or_write == 1) begin
             case (remain_step)
+               5: begin
+                  remain_step <= 4;
+               end
                4: begin
+                  signal_to_ram <= 1;
                   data_to_ram <= data_from_lsb[7:0];
                   if (width_from_lsb == 1) begin
                      ok_to_lsb <= 1;
@@ -168,6 +180,7 @@ always @(posedge clk) begin
                end 
                3: begin
                   data_to_ram <= data_from_lsb[15:8];
+                  addr_to_ram <= addr_to_ram + 1;
                   if (width_from_lsb == 2) begin
                      ok_to_lsb <= 1;
                      remain_step <= 0;
@@ -176,6 +189,7 @@ always @(posedge clk) begin
                end 
                2: begin
                   data_to_ram <= data_from_lsb[23:16];
+                  addr_to_ram <= addr_to_ram + 1;
                   if (width_from_lsb == 3) begin
                      ok_to_lsb <= 1;
                      remain_step <= 0;
@@ -185,11 +199,13 @@ always @(posedge clk) begin
                1: begin
                   ok_to_lsb <= 1;
                   data_to_ram <= data_from_lsb[31:24];
+                  addr_to_ram <= addr_to_ram + 1;
                   remain_step <= 0;
                end
                0: begin
                   remain_step <= 7;
                   ok_to_lsb <= 0;
+                  signal_to_ram <= 0;
                   work_statu <= STALL;
                end
             endcase            

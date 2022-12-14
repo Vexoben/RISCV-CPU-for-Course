@@ -39,6 +39,7 @@ reg [`ADDR_WIDTH] pc[`RS_SIZE_ARR];
 reg [`RS_SIZE_ARR] busy;
 wire [`RS_SIZE_ARR] ready_Q;
 wire [`RS_ID_TYPE] free, ready;
+wire [`RS_ID_TYPE] size;
 
 // -------- debug wire ---------
 
@@ -88,7 +89,7 @@ assign ready = ready_Q[0] ? 0 : ready_Q[1] ? 1 : ready_Q[2] ? 2 : ready_Q[3] ? 3
 
 assign size = busy[0] + busy[1] + busy[2] + busy[3] + busy[4] + busy[5] + busy[6] + busy[7] 
                + busy[8] + busy[9] + busy[10] + busy[11] + busy[12] + busy[13] + busy[14] + busy[15];
-assign full_rs = size == `RS_SIZE;
+assign full_rs = size + 1 >= `RS_SIZE;
 
 reg [`DATA_WIDTH] result;
 reg [`ADDR_WIDTH] pc_next;
@@ -128,15 +129,37 @@ always @(posedge clk) begin
          cdb_rs_pc_next <= pc_next;
          busy[ready] <= 0;
       end
-      else if (enable_cdb_rs == 1) begin
-         enable_cdb_rs <= 0;
+      if (enable_cdb_rs) begin
+         if (ready == `RS_SIZE) enable_cdb_rs <= 0;
+         for (i = 0; i < `RS_SIZE; i = i + 1) begin
+            if (Qj[i] != `NON_DEPENDENT && Qj[i] == cdb_rs_rob_id) begin
+               Qj[i] <= `NON_DEPENDENT;
+               Vj[i] <= cdb_rs_value;
+            end
+            if (Qk[i] != `NON_DEPENDENT && Qk[i] == cdb_rs_rob_id) begin
+               Qk[i] <= `NON_DEPENDENT;
+               Vk[i] <= cdb_rs_value;
+            end
+         end
+      end
+      if (enable_cdb_lsb) begin
+         for (i = 0; i < `RS_SIZE; i = i + 1) begin
+            if (Qj[i] != `NON_DEPENDENT && Qj[i] == cdb_lsb_rob_id) begin
+               Qj[i] <= `NON_DEPENDENT;
+               Vj[i] <= cdb_lsb_value;
+            end
+            if (Qk[i] != `NON_DEPENDENT && Qk[i] == cdb_lsb_rob_id) begin
+               Qk[i] <= `NON_DEPENDENT;
+               Vk[i] <= cdb_lsb_value;
+            end
+         end
       end
    end
 end
 
 always @(*) begin
    result = 0;
-   pc_next = pc[ready] + 4;
+   pc_next = ready == `RS_SIZE ? 0 : pc[ready] + 4;
    if_jump = 0;
    case (type[ready]) 
       `EMPTY_INS : begin
@@ -239,6 +262,46 @@ always @(*) begin
       `AND       : begin           //
          result = Vj[ready] & Vk[ready];
       end
+      default: begin
+         if (ready != `RS_SIZE) $display("ERROR!!!");   
+      end
    endcase
 end
+
+// debug wire
+
+wire [`ADDR_WIDTH] Qj0 = Qj[0];
+wire [`ADDR_WIDTH] Qj1 = Qj[1];
+wire [`ADDR_WIDTH] Qj2 = Qj[2];
+wire [`ADDR_WIDTH] Qj3 = Qj[3];
+wire [`ADDR_WIDTH] Qj4 = Qj[4];
+wire [`ADDR_WIDTH] Qj5 = Qj[5];
+wire [`ADDR_WIDTH] Qj6 = Qj[6];
+wire [`ADDR_WIDTH] Qj7 = Qj[7];
+wire [`ADDR_WIDTH] Qj8 = Qj[8];
+wire [`ADDR_WIDTH] Qj9 = Qj[9];
+wire [`ADDR_WIDTH] Qj10 = Qj[10];
+wire [`ADDR_WIDTH] Qj11 = Qj[11];
+wire [`ADDR_WIDTH] Qj12 = Qj[12];
+wire [`ADDR_WIDTH] Qj13 = Qj[13];
+wire [`ADDR_WIDTH] Qj14 = Qj[14];
+wire [`ADDR_WIDTH] Qj15 = Qj[15];
+
+wire [`ADDR_WIDTH] Vj0 = Vj[0];
+wire [`ADDR_WIDTH] Vj1 = Vj[1];
+wire [`ADDR_WIDTH] Vj2 = Vj[2];
+wire [`ADDR_WIDTH] Vj3 = Vj[3];
+wire [`ADDR_WIDTH] Vj4 = Vj[4];
+wire [`ADDR_WIDTH] Vj5 = Vj[5];
+wire [`ADDR_WIDTH] Vj6 = Vj[6];
+wire [`ADDR_WIDTH] Vj7 = Vj[7];
+wire [`ADDR_WIDTH] Vj8 = Vj[8];
+wire [`ADDR_WIDTH] Vj9 = Vj[9];
+wire [`ADDR_WIDTH] Vj10 = Vj[10];
+wire [`ADDR_WIDTH] Vj11 = Vj[11];
+wire [`ADDR_WIDTH] Vj12 = Vj[12];
+wire [`ADDR_WIDTH] Vj13 = Vj[13];
+wire [`ADDR_WIDTH] Vj14 = Vj[14];
+wire [`ADDR_WIDTH] Vj15 = Vj[15];
+
 endmodule

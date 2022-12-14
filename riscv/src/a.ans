@@ -1,0 +1,32 @@
+WARNING: ./common/block_ram/block_ram.v:93: $readmemh: Standard inconsistency, following 1364-2005.
+VCD info: dumpfile test.vcd opened for output.
+store:     131068          8, width =           4
+store:     131064          0, width =           4
+store:     131044          0, width =           4
+store:     131024          0, width =           4
+store:     131052       4556, width =           4
+store:     131048          0, width =           4
+store:     131040          0, width =           4
+store:     131036          0, width =           4
+store:     131032          0, width =           4
+store:     131028          0, width =           4
+store:     131012         49, width =           1
+load:     131012, width =           1
+read:         49
+store:     196608         49, width =           1
+load:     131052, width =           4
+read:       4556
+load:     131048, width =           4
+read:          0
+load:     131044, width =           4
+read:          0
+load:     131040, width =           4
+read:          0
+load:     131036, width =           4
+read:          0
+load:     131032, width =           4
+read:          0
+load:     131028, width =           4
+read:          0
+load:     131024, width =           4
+read:          0

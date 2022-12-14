@@ -4,7 +4,7 @@ module Decoder(
    input wire [`INS_WIDTH] code,
    input wire [`ADDR_WIDTH] pc,
    output reg [`OPE_WIDTH] ins_type,
-   output reg [`REG_NUMBER_WIDTH] ins_rd, ins_rs1, ins_rs2,    // reg destination, reg source1, reg source2
+   output reg [`EX_REG_NUMBER_WIDTH] ins_rd, ins_rs1, ins_rs2,    // reg destination, reg source1, reg source2
    output reg [`DATA_WIDTH] ins_imm                            // ins immediate
 );
 /*
@@ -74,7 +74,10 @@ always @(*) begin
          endcase
       end
       12'h13: begin
-         ins_imm = {{21{code[31]}}, code[30:20]};
+         if ((code >> 12 & 7) == 1 || (code >> 12 & 7) == 5) begin
+            ins_imm = code >> 20 & 12'h1F;
+         end
+         else ins_imm = {{21{code[31]}}, code[30:20]};
          ins_rs2 = `REG_NUMBER;
          case (code >> 12 & 7)
             0: ins_type = `ADDI;

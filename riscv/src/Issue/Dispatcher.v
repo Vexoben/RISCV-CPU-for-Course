@@ -18,15 +18,15 @@ module Dispatcher(
    output wire [`INS_WIDTH] code_to_decoder,
    output wire [`ADDR_WIDTH] pc_to_decoder,
    input wire [`OPE_WIDTH] ins_type,
-   input wire [`REG_NUMBER_WIDTH] ins_rd, ins_rs1, ins_rs2,  // reg destination, reg source1, reg source2
+   input wire [`EX_REG_NUMBER_WIDTH] ins_rd, ins_rs1, ins_rs2,  // reg destination, reg source1, reg source2
    input wire [`DATA_WIDTH] ins_imm,
 
    // interact with reg & rob to get Vj, Vk, Qj, Qk
    input wire [`DATA_WIDTH] Vj_from_reg, Vk_from_reg,
    input wire [`ROB_ID_TYPE] Qj_from_reg, Qk_from_reg,
    output reg enable_to_reg,
-   output wire [`REG_NUMBER_WIDTH] rs1_to_reg, rs2_to_reg,
-   output reg [`REG_NUMBER_WIDTH] rd_to_reg,
+   output wire [`EX_REG_NUMBER_WIDTH] rs1_to_reg, rs2_to_reg,
+   output reg [`EX_REG_NUMBER_WIDTH] rd_to_reg,
    output reg [`ROB_ID_TYPE] rob_id_to_reg, // renaming
    input wire [`DATA_WIDTH] Vj_from_rob, Vk_from_rob,
    input wire Qj_ready_from_rob, Qk_ready_from_rob,
@@ -57,7 +57,7 @@ module Dispatcher(
    output reg [`ADDR_WIDTH] pc_to_rob,
    output reg [`OPE_WIDTH] type_to_rob,
    output reg [`ADDR_WIDTH] pred_pc_to_rob,
-   output reg [`REG_NUMBER_WIDTH] rd_to_rob,
+   output reg [`EX_REG_NUMBER_WIDTH] rd_to_rob,
    output reg [`INS_WIDTH] code_to_rob,
 
    // interact with cdb
@@ -72,11 +72,12 @@ module Dispatcher(
    input wire full_any_component            // lsb, rs or rob is full
 );
 
-wire is_load;
-wire is_store;
+wire is_load, is_store, is_branch, maybe_change_reg;
 
 assign is_load = ins_type == `LH || ins_type == `LB || ins_type == `LW || ins_type == `LBU || ins_type == `LHU;
 assign is_store = ins_type == `SB || ins_type == `SH || ins_type == `SW;
+assign is_branch = ins_type == `BEQ || ins_type == `BNE || ins_type == `BLT || ins_type == `BGE || ins_type == `BLTU || ins_type == `BGEU;
+assign maybe_change_reg = !is_store && !is_branch;
 
 reg [`ROB_ID_TYPE] Qj, Qk;
 reg [`DATA_WIDTH] Vj, Vk;
@@ -103,8 +104,8 @@ always @(*) begin
    else Vk = 0;
 end
 
-assign Qj_to_rob = Qj;
-assign Qk_to_rob = Qk;
+assign Qj_to_rob = Qj_from_reg;
+assign Qk_to_rob = Qk_from_reg;
 assign rs1_to_reg = ins_rs1;
 assign rs2_to_reg = ins_rs2;
 assign code_to_decoder = ins_from_if;
@@ -138,6 +139,7 @@ always @(posedge clk) begin
          enable_to_rs <= 0;
          enable_to_lsb <= 0;
          enable_to_rob <= 0;
+         enable_to_reg <= 0;
       end
       else if (work_statu == RECIEVE_FROM_IF) begin
          if (enable_from_if) begin
@@ -160,7 +162,7 @@ always @(posedge clk) begin
                code_to_rob <= ins_from_if;
                pc_to_rob <= pc_from_if;
                // reg
-               enable_to_reg <= 1;
+               enable_to_reg <= maybe_change_reg;
                rd_to_reg <= ins_rd;
                rob_id_to_reg <= rob_id;
                // rs
@@ -190,7 +192,7 @@ always @(posedge clk) begin
                   enable_to_rs <= 1;
                   enable_to_lsb <= 0;
                   work_statu <= STALL;
-               end               
+               end
             end
          end
       end

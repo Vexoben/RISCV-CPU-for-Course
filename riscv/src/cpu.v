@@ -42,17 +42,10 @@ assign full_any_component = full_rob || full_rs || full_lsb;
 
 // define 
 // RegFile
-
-wire enable_dsp_to_regfile;
-wire [`EX_REG_NUMBER_WIDTH] rs1_dsp_to_regfile, rs2_dsp_to_regfile;
-wire [`REG_NUMBER_WIDTH] rd_dsp_to_regfile;
-wire [`ROB_ID_TYPE] Q_dsp_to_regfile;
-wire [`DATA_WIDTH] Vj_regfile_to_dsp, Vk_regfile_to_dsp;
-wire [`ROB_ID_TYPE] Qj_regfile_to_dsp, Qk_regfile_to_dsp;
-wire enable_rob_to_regfile;
-wire [`REG_NUMBER_WIDTH] rd_rob_to_regfile;
-wire [`ROB_ID_TYPE] Q_rob_to_regfile;
-wire [`DATA_WIDTH] V_rob_to_regfile;
+wire enable_rob_to_reg;
+wire [`EX_REG_NUMBER_WIDTH] rd_rob_to_reg;
+wire [`DATA_WIDTH] V_rob_to_reg;
+wire [`ROB_ID_TYPE] Q_rob_to_reg;
 
 // Memctrl
 wire ok_memctrl_to_if;
@@ -93,13 +86,14 @@ wire [`INS_WIDTH] code_rob_to_pd;
 wire [`INS_WIDTH] code_dsp_to_dc;
 wire [`ADDR_WIDTH] pc_dsp_to_dc;
 wire [`OPE_WIDTH] ins_type_dc_to_dsp;
-wire [`REG_NUMBER_WIDTH] ins_rd_dc_to_dsp, ins_rs1_dc_to_dsp, ins_rs2_dc_to_dsp;
+wire [`EX_REG_NUMBER_WIDTH] ins_rd_dc_to_dsp, ins_rs1_dc_to_dsp, ins_rs2_dc_to_dsp;
 wire [`DATA_WIDTH] ins_imm_dc_to_dsp;
 
 wire [`DATA_WIDTH] Vj_reg_to_dsp, Vk_reg_to_dsp;
 wire [`ROB_ID_TYPE] Qj_reg_to_dsp, Qk_reg_to_dsp;
 wire enable_dsp_to_reg;
-wire [`REG_NUMBER_WIDTH] rs1_dsp_to_reg, rs2_dsp_to_reg, rd_dsp_to_reg;
+wire [`EX_REG_NUMBER_WIDTH] rs1_dsp_to_reg, rs2_dsp_to_reg;
+wire [`EX_REG_NUMBER_WIDTH] rd_dsp_to_reg;
 wire [`ROB_ID_TYPE] rob_id_dsp_to_reg;
 wire [`DATA_WIDTH] Vj_rob_to_dsp, Vk_rob_to_dsp;
 wire Qj_ready_rob_to_dsp, Qk_ready_rob_to_dsp;
@@ -109,7 +103,7 @@ wire enable_dsp_to_rs;
 wire [`DATA_WIDTH] Vj_dsp_to_rs, Vk_dsp_to_rs;
 wire [`ROB_ID_TYPE] Qj_dsp_to_rs, Qk_dsp_to_rs;
 wire [`OPE_WIDTH] type_dsp_to_rs;
-wire [`REG_NUMBER_WIDTH] rd_dsp_to_rs, rs1_dsp_to_rs, rs2_dsp_to_rs;
+wire [`EX_REG_NUMBER_WIDTH] rd_dsp_to_rs, rs1_dsp_to_rs, rs2_dsp_to_rs;
 wire [`DATA_WIDTH] imm_dsp_to_rs;
 wire [`ADDR_WIDTH] pc_dsp_to_rs;
 wire [`ROB_ID_TYPE] rob_id_dsp_to_rs;
@@ -118,7 +112,7 @@ wire enable_dsp_to_lsb;
 wire [`DATA_WIDTH] Vj_dsp_to_lsb, Vk_dsp_to_lsb;
 wire [`ROB_ID_TYPE] Qj_dsp_to_lsb, Qk_dsp_to_lsb;
 wire [`OPE_WIDTH] type_dsp_to_lsb;
-wire [`REG_NUMBER_WIDTH] rd_dsp_to_lsb, rs1_dsp_to_lsb, rs2_dsp_to_lsb;
+wire [`EX_REG_NUMBER_WIDTH] rd_dsp_to_lsb, rs1_dsp_to_lsb, rs2_dsp_to_lsb;
 wire [`DATA_WIDTH] imm_dsp_to_lsb;
 wire [`ADDR_WIDTH] pc_dsp_to_lsb;
 wire [`ROB_ID_TYPE] rob_id_dsp_to_lsb;
@@ -129,7 +123,7 @@ wire predict_jump_dsp_to_rob;
 wire [`ADDR_WIDTH] pc_dsp_to_rob;
 wire [`OPE_WIDTH] type_dsp_to_rob;
 wire [`ADDR_WIDTH] pred_pc_dsp_to_rob;
-wire [`REG_NUMBER_WIDTH] rd_dsp_to_rob;
+wire [`EX_REG_NUMBER_WIDTH] rd_dsp_to_rob;
 wire [`INS_WIDTH] code_dsp_to_rob;
 
 // cdb
@@ -154,21 +148,21 @@ RegFile regfile(
    .rst(rst_in),
    .rdy(rdy_in),
  
-   .enable_from_dsp(enable_dsp_to_regfile),
-   .rs1_from_dsp(rs1_dsp_to_regfile),
-   .rs2_from_dsp(rs2_dsp_to_regfile),
-   .rd_from_dsp(rd_dsp_to_regfile),
-   .Q_from_dsp(Q_dsp_to_regfile),
-   .Vj_to_dsp(Vj_regfile_to_dsp),
-   .Vk_to_dsp(Vk_regfile_to_dsp),
-   .Qj_to_dsp(Qj_regfile_to_dsp),
-   .Qk_to_dsp(Qk_regfile_to_dsp),
+   .enable_from_dsp(enable_dsp_to_reg),
+   .rs1_from_dsp(rs1_dsp_to_reg),
+   .rs2_from_dsp(rs2_dsp_to_reg),
+   .rd_from_dsp(rd_dsp_to_reg),
+   .rob_id_from_dsp(rob_id_dsp_to_reg),
+   .Vj_to_dsp(Vj_reg_to_dsp),
+   .Vk_to_dsp(Vk_reg_to_dsp),
+   .Qj_to_dsp(Qj_reg_to_dsp),
+   .Qk_to_dsp(Qk_reg_to_dsp),
  
    .mispredict(mispredict),
-   .enable_from_rob(enable_rob_to_regfile),
-   .rd_from_rob(rd_rob_to_regfile),
-   .Q_from_rob(Q_rob_to_regfile),
-   .V_from_rob(V_rob_to_regfile)
+   .enable_from_rob(enable_rob_to_reg),
+   .rd_from_rob(rd_rob_to_reg),
+   .Q_from_rob(Q_rob_to_reg),
+   .V_from_rob(V_rob_to_reg)
 );
 
 Memctrl memctrl(
@@ -435,9 +429,10 @@ ROB rob(
    .cdb_rs_jump(cdb_rs_jump),
    .cdb_rs_pc_next(cdb_rs_pc_next),
 
-   .enable_to_reg(enable_rob_to_regfile),
-   .V_to_reg(V_rob_to_regfile),
-   .Q_to_reg(Q_rob_to_regfile),
+   .enable_to_reg(enable_rob_to_reg),
+   .rd_to_reg(rd_rob_to_reg),
+   .V_to_reg(V_rob_to_reg),
+   .Q_to_reg(Q_rob_to_reg),
 
    .mispredict(mispredict),
 

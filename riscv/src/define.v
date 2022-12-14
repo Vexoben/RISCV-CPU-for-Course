@@ -16,11 +16,8 @@
 `define BLOCK_RANGE 1:0
 `define IC_BLOCK_SIZE 4
 `define IC_BLOCK_SIZE_ARR 3:0
-`define ICACHE_SIZE 32
-`define ICACHE_SIZE_ARR 15:0
-// instruction queue parameters
-`define IQ_SIZE 16
-`define IQ_SIZE_ARR 3:0
+`define ICACHE_SIZE 256
+`define ICACHE_SIZE_ARR 255:0
 // rob parameters
 `define ROB_SIZE 16
 `define ROB_SIZE_ARR 15:0
@@ -31,7 +28,7 @@
 `define RS_ID_TYPE 4:0
 `define LSB_SIZE 16
 `define LSB_SIZE_ARR 15:0
-`define LSB_ID_TYPE 3:0
+`define LSB_ID_TYPE 4:0
 
 // ins number
 `define EMPTY_INS 6'd0
