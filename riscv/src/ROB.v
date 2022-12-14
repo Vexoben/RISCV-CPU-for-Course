@@ -164,7 +164,7 @@ always @(posedge clk) begin
          else begin
             enable_to_predictor <= 0;
          end
-         if (head_is_store || head_is_load) begin
+         if (head_is_store) begin
             commit_signal <= 1;
             committed_from_rob <= head;
          end

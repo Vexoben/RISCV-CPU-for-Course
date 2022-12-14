@@ -100,7 +100,7 @@ always @(posedge clk) begin
    end
    else if (mispredict) begin
       tail <= committed_tail;
-      size <= (committed_tail >= head ? committed_tail - head : committed_tail + 32 - head);
+      size <= (committed_tail >= head ? committed_tail - head : committed_tail + `LSB_SIZE - head);
       push <= 0; pop <= 0;
       enable_cdb_lsb <= 0;
       enable_to_memctrl <= 0;
@@ -187,8 +187,8 @@ always @(posedge clk) begin
                `LHU: cdb_lsb_value <= {16'b0, data_from_memctrl[15:0]};
             endcase
             busy[head] <= 0;
-            head = (head + 1 == `LSB_SIZE) ? 0 : head + 1;
-            committed_tail <= (head + 1 == `LSB_SIZE) ? 0 : head + 1;;
+            head <= (head + 1 == `LSB_SIZE) ? 0 : head + 1;
+            committed_tail <= (head + 1 == `LSB_SIZE) ? 0 : head + 1;
          end
          else pop <= 0;
       end
@@ -242,7 +242,7 @@ always @(posedge clk) begin
       end
       if (commit_signal) begin
          for (i = 0; i < `LSB_SIZE; i = i + 1) begin
-            if (rob_id[i] == committed_from_rob) begin
+            if (rob_id[i] == committed_from_rob && rob_id[i] != `NON_DEPENDENT) begin
                committed[i] = 1;
             end
          end
