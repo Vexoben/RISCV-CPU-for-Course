@@ -40,7 +40,6 @@ module cpu(
 wire full_rob, full_lsb, full_rs, full_any_component;
 assign full_any_component = full_rob || full_rs || full_lsb;
 
-
 // define 
 // RegFile
 
@@ -56,9 +55,9 @@ wire [`ROB_ID_TYPE] Q_rob_to_regfile;
 wire [`DATA_WIDTH] V_rob_to_regfile;
 
 // Memctrl
+wire ok_memctrl_to_if;
 wire enable_if_to_memctrl;
 wire [`ADDR_WIDTH] addr_if_to_memctrl;
-wire enable_memctrl_to_if;
 wire [`INS_WIDTH] ins_memctrl_to_if;
 
 wire enable_lsb_to_memctrl;
@@ -152,7 +151,7 @@ wire mispredict;
 
 RegFile regfile(
    .clk(clk_in),
-   .rst(rsk_in),
+   .rst(rst_in),
    .rdy(rdy_in),
  
    .enable_from_dsp(enable_dsp_to_regfile),
@@ -174,7 +173,7 @@ RegFile regfile(
 
 Memctrl memctrl(
    .clk(clk_in),
-   .rst(rsk_in),
+   .rst(rst_in),
    .rdy(rdy_in),
 
    .data_from_ram(mem_din),
@@ -185,7 +184,7 @@ Memctrl memctrl(
 
    .enable_from_if(enable_if_to_memctrl),
    .addr_from_if(addr_if_to_memctrl),
-   .enable_to_if(enable_memctrl_to_if),
+   .enable_to_if(ok_memctrl_to_if),
    .ins_to_if(ins_memctrl_to_if),
 
    .enable_from_lsb(enable_lsb_to_memctrl),
@@ -199,7 +198,7 @@ Memctrl memctrl(
 
 InsFetcher insfetcher(
    .clk(clk_in),
-   .rst(rsk_in),
+   .rst(rst_in),
    .rdy(rdy_in),
 
    .pc_pred_from_predictor(pc_pred_pd_to_if),
@@ -217,7 +216,7 @@ InsFetcher insfetcher(
    .predict_jump_to_dispatcher(predict_jump_if_to_dsp),
    .pc_to_dispatcher(pc_if_to_dsp),
    .ins_to_dispatcher(ins_if_to_dsp),
-   .pc_pred_to_dispatcher(ins_if_to_dsp),
+   .pc_pred_to_dispatcher(pc_pred_if_to_dsp),
 
    .enable_from_rob(enable_rob_to_if),
    .mispredict(mispredict),
@@ -226,7 +225,7 @@ InsFetcher insfetcher(
 
 Predictor predictor(
    .clk(clk_in),
-   .rst(rsk_in),
+   .rst(rst_in),
    .rdy(rdy_in),
 
    .pc_cur(pc_if_to_pd),
@@ -241,7 +240,7 @@ Predictor predictor(
 
 Dispatcher dispatchar(
    .clk(clk_in),
-   .rst(rsk_in),
+   .rst(rst_in),
    .rdy(rdy_in),
 
    // if
@@ -334,7 +333,7 @@ Decoder decoder(
 
 RS rs(
    .clk(clk_in),
-   .rst(rsk_in),
+   .rst(rst_in),
    .rdy(rdy_in),
 
    .enable_from_dsp(enable_dsp_to_rs),
@@ -363,7 +362,7 @@ RS rs(
 
 LSB lsb(
    .clk(clk_in),
-   .rst(rsk_in),
+   .rst(rst_in),
    .rdy(rdy_in),
 
    .enable_from_dsp(enable_dsp_to_lsb),
@@ -399,7 +398,7 @@ LSB lsb(
 
 ROB rob(
    .clk(clk_in),
-   .rst(rsk_in),
+   .rst(rst_in),
    .rdy(rdy_in),
 
    .enable_to_if(enable_rob_to_if),

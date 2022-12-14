@@ -51,14 +51,21 @@ reg [`INS_WIDTH] datas[`ICACHE_SIZE_ARR][`IC_BLOCK_SIZE_ARR];
 
 // pc
 reg mem_pc_new_valid;
-reg [`ADDR_WIDTH] pc, mem_pc, mem_pc_new;
+reg [`ADDR_WIDTH] pc, dsp_pc, mem_pc, mem_pc_new;
 
 wire hit = enable_from_dispatcher 
-            && tags[pc[`INDEX_RANGE]][pc[`BLOCK_RANGE]] == pc[`TAG_RANGE] 
-            && valid[pc[`INDEX_RANGE]][pc[`BLOCK_RANGE]] == 1;
+            && tags[dsp_pc[`INDEX_RANGE]][dsp_pc[`BLOCK_RANGE]] == dsp_pc[`TAG_RANGE] 
+            && valid[dsp_pc[`INDEX_RANGE]][dsp_pc[`BLOCK_RANGE]] == 1;
+
+integer i, j;
 
 always @(posedge clk) begin
    if (rst) begin
+      pc <= 0;
+      dsp_pc <= 0;
+      mem_pc <= 0;
+      mem_pc_new_valid <= 0;
+      mem_pc_new <= 0;
       pc_to_predictor <= 0;
       code_to_predictor <= 0;
       enable_to_memctrl <= 0;
@@ -67,17 +74,13 @@ always @(posedge clk) begin
       pc_to_dispatcher <= 0;
       ins_to_dispatcher <= 0;
       work_statu = STALL;
-      for (integer i = 0; i < `ICACHE_SIZE; i = i + 1) begin
-         for (integer j = 0; j < `IC_BLOCK_SIZE; j = j + 1) begin
+      for (i = 0; i < `ICACHE_SIZE; i = i + 1) begin
+         for (j = 0; j < `IC_BLOCK_SIZE; j = j + 1) begin
             valid[i][j] <= 0;
             tags[i][j] <= 0;
             datas[i][j] <= 0;
          end
       end
-      mem_pc_new_valid <= 0;
-      pc <= 0;
-      mem_pc <= 0;
-      mem_pc_new <= 0;
    end
    else if (!rdy) begin
       // do nothing 
@@ -90,10 +93,12 @@ always @(posedge clk) begin
          if (work_statu == SEND_INS || work_statu == STALL) begin  // case1, is sending ins to dispatcher: stop sending.    
             enable_to_dispatcher <= 0;      // dispatcher will recieve the same signal from rob, 
             mem_pc <= pc_next;              // and enable_from_dispatcher will be set to 0 in the next cycle
+            dsp_pc <= pc_next;
          end                                
          else if (work_statu == INS_FETCH_A || work_statu == INS_FETCH_B || work_statu == WAIT_PREDICT_A || work_statu == WAIT_PREDICT_B) begin
             mem_pc_new_valid <= 1;          // case2, is fetching ins from memctrl: wait for current ins_fetch.
             mem_pc_new <= pc_next;          // record new pc_next(sent from rob), update mem_pc to mem_pc_new after finishing ins_fetch
+            dsp_pc <= pc_next;
          end
       end
       else begin
@@ -103,22 +108,22 @@ always @(posedge clk) begin
                   work_statu <= INS_FETCH_A;
                   enable_to_memctrl <= 1;
                   addr_to_memctrl <= pc;
-                  mem_pc <= pc;
+                  mem_pc <= dsp_pc;
                end
                else begin
                   work_statu <= WAIT_PREDICT_A;
                   enable_to_memctrl <= 0;
                   enable_to_dispatcher <= 0;
-                  ins_to_dispatcher <= datas[mem_pc[`INDEX_RANGE]][mem_pc[`BLOCK_RANGE]];
-                  pc_to_dispatcher <= mem_pc;
-                  code_to_predictor <= datas[mem_pc[`INDEX_RANGE]][mem_pc[`BLOCK_RANGE]];
-                  pc_to_predictor <= mem_pc;
+                  ins_to_dispatcher <= datas[dsp_pc[`INDEX_RANGE]][dsp_pc[`BLOCK_RANGE]];
+                  pc_to_dispatcher <= dsp_pc;
+                  code_to_predictor <= datas[dsp_pc[`INDEX_RANGE]][dsp_pc[`BLOCK_RANGE]];
+                  pc_to_predictor <= dsp_pc;
                end
             end
             else begin
                work_statu <= INS_FETCH_B;
                enable_to_memctrl <= 1;
-               addr_to_memctrl <= 1;
+               addr_to_memctrl <= mem_pc;
             end
          end
          else if (work_statu == INS_FETCH_A || work_statu == INS_FETCH_B) begin
@@ -126,6 +131,8 @@ always @(posedge clk) begin
                valid[mem_pc[`INDEX_RANGE]][mem_pc[`BLOCK_RANGE]] = 1;
                tags[mem_pc[`INDEX_RANGE]][mem_pc[`BLOCK_RANGE]] <= mem_pc[`TAG_RANGE];
                datas[mem_pc[`INDEX_RANGE]][mem_pc[`BLOCK_RANGE]] <= ins_from_memctrl;
+               ins_to_dispatcher <= ins_from_memctrl;
+               pc_to_dispatcher <= mem_pc;
                enable_to_memctrl <= 0;
                code_to_predictor <= ins_from_memctrl;
                pc_to_predictor <= mem_pc;
@@ -139,6 +146,7 @@ always @(posedge clk) begin
             mem_pc <= pc_pred_from_predictor;
             if (enable_from_dispatcher && work_statu == WAIT_PREDICT_A) begin
                enable_to_dispatcher <= 1;
+               dsp_pc <= pc_pred_from_predictor;
                work_statu <= SEND_INS;
             end
             else work_statu <= STALL;
@@ -154,7 +162,7 @@ always @(posedge clk) begin
       end
    end
 end
-
+endmodule
 
 /*
       if (enable_from_rob) begin          // an instruction is commited from rob 
@@ -227,4 +235,3 @@ end
             end
          end
       end */
-endmodule

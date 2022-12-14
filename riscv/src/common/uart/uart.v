@@ -25,6 +25,11 @@
 *  (serial) port.
 ***************************************************************************************************/
 
+`include "/mnt/f/github/RISCV-CPU-for-Course/riscv/src/common/uart/uart_rx.v"
+`include "/mnt/f/github/RISCV-CPU-for-Course/riscv/src/common/uart/uart_tx.v"
+`include "/mnt/f/github/RISCV-CPU-for-Course/riscv/src/common/uart/uart_baud_clk.v"
+
+
 module uart
 #(
   parameter SYS_CLK_FREQ = 50000000,

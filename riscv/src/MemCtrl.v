@@ -35,7 +35,7 @@ READ_DATA = 2,
 WRITE_DATA = 3;
 
 reg [2:0] work_statu;
-reg [2:0] remain_step; // 1-4: not ready; 0: ready; 7: out of work
+reg [2:0] remain_step; // 1-4: not ready; 0: ready; 5:wait; 7: out of work
 reg last_response;     // 0: if; 1: lsb
 
 always @(posedge clk) begin
@@ -60,25 +60,32 @@ always @(posedge clk) begin
             work_statu = read_or_write ? READ_DATA : WRITE_DATA;
             data_to_ram <= 0;
             addr_to_ram <= addr_from_lsb;
-            remain_step <= 4;
+            remain_step <= 5;
             last_response <= 1;
          end
          else if (enable_from_if && (last_response == 1 || !enable_from_lsb)) begin
             work_statu <= INS_FETCH;
-            remain_step <= 4;
-            signal_to_ram <= 1;
+            remain_step <= 5;
+            signal_to_ram <= 0;
+            addr_to_ram <= addr_from_if;
             last_response <= 0;
          end
       end
       else if (work_statu == INS_FETCH) begin
          if (enable_from_if) begin
             case (remain_step)
+               5: begin
+                  addr_to_ram <= addr_to_ram + 1;
+                  remain_step <= 4;
+               end
                4: begin
                   ins_to_if[7:0] <= data_from_ram;
+                  addr_to_ram <= addr_to_ram + 1;
                   remain_step <= 3;
                end 
                3: begin
                   ins_to_if[15:8] <= data_from_ram;
+                  addr_to_ram <= addr_to_ram + 1;
                   remain_step <= 2;
                end 
                2: begin

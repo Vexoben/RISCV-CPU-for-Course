@@ -19,7 +19,7 @@ module Predictor (
 
 wire is_JALR = ins_cur[6:0] == 7'b1100111;
 
-assign pr_pred = pc_cur + 4;
-assign predict_jump_to_dispatcher = 1;
+assign pc_pred = pc_cur + 4;
+assign predict_jump_to_dispatcher = 0;
    
 endmodule

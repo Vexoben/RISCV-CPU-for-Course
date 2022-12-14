@@ -1,6 +1,8 @@
 // testbench top module file
 // for simulation only
 
+`include "../src/"
+
 `timescale 1ns/1ps
 module testbench;
 

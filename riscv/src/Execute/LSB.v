@@ -25,7 +25,7 @@ module LSB(
    input ok_from_memctrl,
    input [`DATA_WIDTH] data_from_memctrl,
    output reg enable_to_memctrl,
-   output reg read_or_write_to_memctrl,          // read:1, write:0
+   output reg read_or_write_to_memctrl,          // read:0, write:1
    output reg [`ADDR_WIDTH] addr_to_memctrl,
    output reg [`DATA_WIDTH] data_to_memctrl,
    output reg [2:0] width_to_memctrl,
@@ -36,14 +36,14 @@ module LSB(
    input wire [`ROB_ID_TYPE] committed_from_rob,
 
    // global
-   output wire full_lsb
+   output wire full_lsb, full_dc // data cache(write only)
 );
 
 reg [`LSB_ID_TYPE] head, tail;
 reg [`LSB_ID_TYPE] size, push, pop;
 
 reg [`DATA_WIDTH] Vj[`LSB_SIZE_ARR], Vk[`LSB_SIZE_ARR];
-reg [`ROB_SIZE_ARR] Qj[`LSB_SIZE_ARR], Qk[`LSB_SIZE_ARR], rob_id[`LSB_SIZE_ARR];
+reg [`ROB_ID_TYPE] Qj[`LSB_SIZE_ARR], Qk[`LSB_SIZE_ARR], rob_id[`LSB_SIZE_ARR];
 reg [`OPE_WIDTH] type[`LSB_SIZE_ARR];
 reg [`DATA_WIDTH] imm[`LSB_SIZE_ARR];
 reg [`LSB_SIZE_ARR] busy;
@@ -51,6 +51,11 @@ reg [`LSB_SIZE_ARR] commited;
 
 wire [`DATA_WIDTH] real_Vj, real_Vk;
 wire [`ROB_SIZE_ARR] real_Qj, real_Qk;
+
+// data cache
+reg [`LSB_ID_TYPE] dc_size, dc_push, dc_pop;
+reg [`DATA_WIDTH] dc_data[`LSB_SIZE_ARR];
+reg [`ADDR_WIDTH] dc_addr[`LSB_SIZE_ARR];
 
 assign real_Qj = (enable_cdb_rs && cdb_rs_rob_id == Qj_from_dsp) ? `NON_DEPENDENT : (enable_cdb_lsb && cdb_lsb_rob_id == Qj_from_dsp) ? `NON_DEPENDENT : Qj_from_dsp;
 assign real_Qk = (enable_cdb_rs && cdb_rs_rob_id == Qk_from_dsp) ? `NON_DEPENDENT : (enable_cdb_lsb && cdb_lsb_rob_id == Qk_from_dsp) ? `NON_DEPENDENT : Qk_from_dsp;
@@ -61,6 +66,7 @@ assign full_lsb = size == `LSB_SIZE;
 wire head_is_load = busy[head] && (type[head] == `LB || type[head] == `LH || type[head] == `LBU || type[head] == `LHU || type[head] == `LW);
 wire head_is_store = busy[head] && (type[head] == `SB || type[head] == `SH || type[head] == `SW);
 
+integer i;
 
 parameter
 STALL = 0,
@@ -72,13 +78,13 @@ reg [2:0] work_statu;
 
 reg[`LSB_SIZE_ARR] ready;
 always @(*) begin
-   for (integer i = 0; i < `LSB_SIZE; ++i) begin
+   for (i = 0; i < `LSB_SIZE; i = i + 1) begin
       ready[i] = Qj[i] == `NON_DEPENDENT && Qk[i] == `NON_DEPENDENT;
    end
 end
 
 always @(posedge clk) begin
-   if (rst || mispredict) begin
+   if (rst) begin
       head <= 0;
       tail <= 0;
       push <= 0;
@@ -86,7 +92,7 @@ always @(posedge clk) begin
       size <= 0;
       enable_cdb_lsb <= 0;
       enable_to_memctrl <= 0;
-      for (integer i = 0; i < `LSB_SIZE; ++i) begin
+      for (i = 0; i < `LSB_SIZE; i = i + 1) begin
          busy[i] <= 0;
          commited[i] <= 0;
       end
@@ -113,7 +119,7 @@ always @(posedge clk) begin
          if (head_is_load && ready[head]) begin
             work_statu <= READ_DATA;
             enable_to_memctrl <= 1;
-            read_or_write_to_memctrl <= 1;
+            read_or_write_to_memctrl <= 0;
             addr_to_memctrl <= Vj[head] + imm[head];
             head = (head + 1 == `LSB_SIZE) ? 0 : head + 1;
             case (type[head])
@@ -194,7 +200,7 @@ always @(posedge clk) begin
    size <= size + push - pop;
 
    if (enable_cdb_lsb) begin
-      for (integer i = 0; i < `LSB_SIZE; ++i) begin
+      for (i = 0; i < `LSB_SIZE; i = i + 1) begin
          if (Qj[i] == cdb_lsb_rob_id) begin
             Qj[i] <= `NON_DEPENDENT;
          end
@@ -205,7 +211,7 @@ always @(posedge clk) begin
       enable_cdb_lsb <= 0;
    end
    if (enable_cdb_rs) begin
-      for (integer i = 0; i < `LSB_SIZE; ++i) begin
+      for (i = 0; i < `LSB_SIZE; i = i + 1) begin
          if (Qj[i] == cdb_rs_rob_id) begin
             Qj[i] <= `NON_DEPENDENT;
          end
@@ -215,12 +221,15 @@ always @(posedge clk) begin
       end      
    end
    if (commit_signal) begin
-      for (integer i = 0; i < `LSB_SIZE; ++i) begin
+      for (i = 0; i < `LSB_SIZE; i = i + 1) begin
          if (rob_id[i] == committed_from_rob) begin
             commited[i] = 1;
          end
       end
    end
+
+   
+
 end
 
 endmodule

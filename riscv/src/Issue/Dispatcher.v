@@ -78,7 +78,7 @@ wire is_store;
 assign is_load = ins_type == `LH || ins_type == `LB || ins_type == `LW || ins_type == `LBU || ins_type == `LHU;
 assign is_store = ins_type == `SB || ins_type == `SH || ins_type == `SW;
 
-reg [`ROB_SIZE_ARR] Qj, Qk;
+reg [`ROB_ID_TYPE] Qj, Qk;
 reg [`DATA_WIDTH] Vj, Vk;
 
 always @(*) begin
@@ -143,43 +143,54 @@ always @(posedge clk) begin
          if (enable_from_if) begin
             // if
             enable_to_if <= 0;
-            // rob
-            enable_to_rob <= 1;
-            predict_jump_to_rob <= predict_jump_from_if;
-            pred_pc_to_rob <= pred_pc_from_if;
-            rd_to_rob <= ins_rd;
-            type_to_rob <= ins_type;
-            code_to_rob <= ins_from_if;
-            // reg
-            enable_to_reg <= 1;
-            rd_to_reg <= ins_rd;
-            rob_id_to_reg <= rob_id;
-            // rs
-            Vj_to_rs <= Vj;
-            Vk_to_rs <= Vk;
-            Qj_to_rs <= Qj;
-            Qk_to_rs <= Qk;
-            type_to_rs <= ins_type;
-            imm_to_rs <= ins_imm;
-            rob_id_to_rs <= rob_id;
-            // lsb
-            Vj_to_lsb <= Vj;
-            Vk_to_lsb <= Vk;
-            Qj_to_lsb <= Qj;
-            Qk_to_lsb <= Qk;
-            type_to_lsb <= ins_type;
-            imm_to_lsb <= ins_imm;
-            rob_id_to_lsb <= rob_id;
-
-            if (is_load || is_store) begin
+            if (ins_type == `EMPTY_INS) begin
+               enable_to_rob <= 0;
+               enable_to_reg <= 0;
                enable_to_rs <= 0;
-               enable_to_lsb <= 1;
+               enable_to_lsb <= 0;
                work_statu <= STALL;
             end
             else begin
-               enable_to_rs <= 1;
-               enable_to_lsb <= 0;
-               work_statu <= STALL;
+               // rob
+               enable_to_rob <= 1;
+               predict_jump_to_rob <= predict_jump_from_if;
+               pred_pc_to_rob <= pred_pc_from_if;
+               rd_to_rob <= ins_rd;
+               type_to_rob <= ins_type;
+               code_to_rob <= ins_from_if;
+               pc_to_rob <= pc_from_if;
+               // reg
+               enable_to_reg <= 1;
+               rd_to_reg <= ins_rd;
+               rob_id_to_reg <= rob_id;
+               // rs
+               Vj_to_rs <= Vj;
+               Vk_to_rs <= Vk;
+               Qj_to_rs <= Qj;
+               Qk_to_rs <= Qk;
+               type_to_rs <= ins_type;
+               imm_to_rs <= ins_imm;
+               rob_id_to_rs <= rob_id;
+               pc_to_rs <= pc_from_if;
+               // lsb
+               Vj_to_lsb <= Vj;
+               Vk_to_lsb <= Vk;
+               Qj_to_lsb <= Qj;
+               Qk_to_lsb <= Qk;
+               type_to_lsb <= ins_type;
+               imm_to_lsb <= ins_imm;
+               rob_id_to_lsb <= rob_id;
+
+               if (is_load || is_store) begin
+                  enable_to_rs <= 0;
+                  enable_to_lsb <= 1;
+                  work_statu <= STALL;
+               end
+               else begin
+                  enable_to_rs <= 1;
+                  enable_to_lsb <= 0;
+                  work_statu <= STALL;
+               end               
             end
          end
       end

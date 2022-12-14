@@ -78,6 +78,28 @@ wire head_is_branch = busy[head] && (type[head] == `BEQ || type[head] == `BNE ||
 wire head_maybe_change_reg = busy[head] && (!head_is_branch && !head_is_store);
 wire head_is_jump = busy[head] && (head_is_branch || type[head] == `JAL || type[head] == `JALR);
 
+integer i;
+
+// --------- debug wire  ----------
+wire [`ADDR_WIDTH] pc_next0 = pc_next[0];
+wire [`ADDR_WIDTH] pc_next1 = pc_next[1];
+wire [`ADDR_WIDTH] pc_next2 = pc_next[2];
+wire [`ADDR_WIDTH] pc_next3 = pc_next[3];
+wire [`ADDR_WIDTH] pc_next4 = pc_next[4];
+wire [`ADDR_WIDTH] pc_next5 = pc_next[5];
+wire [`ADDR_WIDTH] pc_next6 = pc_next[6];
+wire [`ADDR_WIDTH] pc_next7 = pc_next[7];
+wire [`ADDR_WIDTH] pc_next8 = pc_next[8];
+wire [`ADDR_WIDTH] pc_next9 = pc_next[9];
+wire [`ADDR_WIDTH] pc_next10 = pc_next[10];
+wire [`ADDR_WIDTH] pc_next11 = pc_next[11];
+wire [`ADDR_WIDTH] pc_next12 = pc_next[12];
+wire [`ADDR_WIDTH] pc_next13 = pc_next[13];
+wire [`ADDR_WIDTH] pc_next14 = pc_next[14];
+wire [`ADDR_WIDTH] pc_next15 = pc_next[15];
+
+// ---------------------------------
+
 always @(posedge clk) begin
    if (rst || mispredict) begin // clear all
       head <= 0;
@@ -93,7 +115,7 @@ always @(posedge clk) begin
       enable_to_predictor <= 0;
       enable_to_reg <= 0;
       commit_signal <= 0;
-      for (integer i = 0; i < `ROB_SIZE; ++i) begin
+      for (i = 0; i < `ROB_SIZE; i = i + 1) begin
          type[i] <= 0;
          pc[i] <= 0; pred_pc[i] <= 0; pc_next[i] <= 0;
          rd[i] <= 0; 
@@ -133,7 +155,7 @@ always @(posedge clk) begin
       if (ready[head] || head_is_store) begin   // commit
          head <= head == (`ROB_SIZE - 1) ? 0 : head + 1;
          pop <= 1;
-         enable_to_reg <= head_maybe_change_reg && (!head_is_jump || actu_jump[head] == predict_jump[head]);
+         enable_to_reg <= head_maybe_change_reg;
          V_to_reg <= result[head];
          Q_to_reg <= head;
          ready[head] <= 0;
@@ -168,9 +190,10 @@ always @(posedge clk) begin
          enable_to_predictor <= 0;
          commit_signal <= 0;
       end
-   end
 
-   size <= size + push - pop;
+      size <= size + push - pop;
+
+   end
 end
 
 

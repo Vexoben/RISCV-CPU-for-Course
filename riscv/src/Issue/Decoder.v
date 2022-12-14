@@ -7,13 +7,13 @@ module Decoder(
    output reg [`REG_NUMBER_WIDTH] ins_rd, ins_rs1, ins_rs2,    // reg destination, reg source1, reg source2
    output reg [`DATA_WIDTH] ins_imm                            // ins immediate
 );
-
+/*
 function [`INS_WIDTH] signed_extend;
    input [`INS_WIDTH] c;
    input [`OPE_WIDTH] bit;
    signed_extend = (bit == 32) ? c : c >> (bit - 1) & 1 ? c | (32'hFFFFFFFF >> bit << bit) : c;
 endfunction
-
+*/
 always @(*) begin
    ins_type = `EMPTY_INS;
    ins_rd = (code >> 7) & 12'h1F;
@@ -22,29 +22,29 @@ always @(*) begin
    case (code & 12'h7F)
       12'h37: begin
          ins_type = `LUI;
-         ins_imm = signed_extend(code >> 12, 20);
+         ins_imm = {code[31:12], 12'b0};
          ins_rs1 = `REG_NUMBER;
          ins_rs2 = `REG_NUMBER;
       end
       12'h17: begin
          ins_type = `AUIPC;
-         ins_imm = signed_extend(code >> 12, 20);
+         ins_imm = {code[31:12], 12'b0};
          ins_rs1 = `REG_NUMBER;
          ins_rs2 = `REG_NUMBER;
       end
       12'h6F: begin
          ins_type = `JAL;
-         ins_imm = signed_extend((code >> 31 & 1) << 20 | (code >> 21 & 12'h3FF) << 1 | (code >> 20 & 1) << 11 | (code >> 12 & 12'hFF) << 12, 21);
+         ins_imm = {{12{code[31]}}, code[19:12], code[20], code[30:21], 1'b0};
          ins_rs1 = `REG_NUMBER;
          ins_rs2 = `REG_NUMBER;
       end
       12'h67: begin
          ins_type = `JALR;
-         ins_imm = signed_extend(code >> 20, 12);
+         ins_imm = {{21{code[31]}}, code[30:20]};
          ins_rs2 = `REG_NUMBER;
       end
       12'h63: begin
-         ins_imm = signed_extend((code >> 8 & 12'hF) << 1 | (code >> 25 & 12'h3F) << 5 | (code >> 7 & 1) << 11 | (code >> 31 & 1) << 12, 13);
+         ins_imm = {{20{code[31]}}, code[7], code[30:25], code[11:8], 1'b0};
          case (code >> 12 & 7) 
             0: ins_type = `BEQ;
             1: ins_type = `BNE;
@@ -55,7 +55,7 @@ always @(*) begin
          endcase
       end
       3: begin
-         ins_imm = signed_extend(code >> 20, 12);
+         ins_imm = {{21{code[31]}}, code[30:20]};
          ins_rs2 = `REG_NUMBER;
          case (code >> 12 & 7) 
             0: ins_type = `LB;
@@ -66,7 +66,7 @@ always @(*) begin
          endcase
       end
       12'h23: begin
-         ins_imm = signed_extend((code >> 7 & 12'h1F) | (code >> 25) << 5, 12);
+         ins_imm = {{21{code[31]}}, code[30:25], code[11:7]};
          case (code >> 12 & 7) 
             0: ins_type = `SB;
             1: ins_type = `SH;
@@ -74,7 +74,7 @@ always @(*) begin
          endcase
       end
       12'h13: begin
-         ins_imm = signed_extend(code >> 20, 12);
+         ins_imm = {{21{code[31]}}, code[30:20]};
          ins_rs2 = `REG_NUMBER;
          case (code >> 12 & 7)
             0: ins_type = `ADDI;

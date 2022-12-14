@@ -24,10 +24,11 @@
 // rob parameters
 `define ROB_SIZE 16
 `define ROB_SIZE_ARR 15:0
-`define ROB_ID_TYPE 3:0
+`define ROB_ID_TYPE 4:0
 `define NON_DEPENDENT 16
 `define RS_SIZE 16
 `define RS_SIZE_ARR 15:0
+`define RS_ID_TYPE 4:0
 `define LSB_SIZE 16
 `define LSB_SIZE_ARR 15:0
 `define LSB_ID_TYPE 3:0

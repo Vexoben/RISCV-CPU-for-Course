@@ -32,16 +32,29 @@ module RS(
 );
 
 reg [`DATA_WIDTH] Vj[`RS_SIZE_ARR], Vk[`RS_SIZE_ARR];
-reg [`ROB_SIZE_ARR] Qj[`RS_SIZE_ARR], Qk[`RS_SIZE_ARR], rob_id[`RS_SIZE_ARR];
+reg [`ROB_ID_TYPE] Qj[`RS_SIZE_ARR], Qk[`RS_SIZE_ARR], rob_id[`RS_SIZE_ARR];
 reg [`OPE_WIDTH] type[`RS_SIZE_ARR];
 reg [`DATA_WIDTH] imm[`RS_SIZE_ARR];
 reg [`ADDR_WIDTH] pc[`RS_SIZE_ARR];
 reg [`RS_SIZE_ARR] busy;
 wire [`RS_SIZE_ARR] ready_Q;
-wire [`RS_SIZE_ARR] free, ready;
+wire [`RS_ID_TYPE] free, ready;
+
+// -------- debug wire ---------
+
+wire [`OPE_WIDTH] type0 = type[0];
+wire [`OPE_WIDTH] type1 = type[1];
+wire [`OPE_WIDTH] type2 = type[2];
+wire [`OPE_WIDTH] type3 = type[3];
+wire [`ADDR_WIDTH] pc0 = pc[0];
+wire [`ADDR_WIDTH] pc1 = pc[1];
+wire [`ADDR_WIDTH] pc2 = pc[2];
+wire [`ADDR_WIDTH] pc3 = pc[3];
+
+// -----------------------------
 
 wire [`DATA_WIDTH] real_Vj, real_Vk;
-wire [`ROB_SIZE_ARR] real_Qj, real_Qk;
+wire [`ROB_ID_TYPE] real_Qj, real_Qk;
 
 assign real_Qj = (enable_cdb_rs && cdb_rs_rob_id == Qj_from_dsp) ? `NON_DEPENDENT : (enable_cdb_lsb && cdb_lsb_rob_id == Qj_from_dsp) ? `NON_DEPENDENT : Qj_from_dsp;
 assign real_Qk = (enable_cdb_rs && cdb_rs_rob_id == Qk_from_dsp) ? `NON_DEPENDENT : (enable_cdb_lsb && cdb_lsb_rob_id == Qk_from_dsp) ? `NON_DEPENDENT : Qk_from_dsp;
@@ -76,17 +89,19 @@ assign ready = ready_Q[0] ? 0 : ready_Q[1] ? 1 : ready_Q[2] ? 2 : ready_Q[3] ? 3
 assign size = busy[0] + busy[1] + busy[2] + busy[3] + busy[4] + busy[5] + busy[6] + busy[7] 
                + busy[8] + busy[9] + busy[10] + busy[11] + busy[12] + busy[13] + busy[14] + busy[15];
 assign full_rs = size == `RS_SIZE;
-               
+
 reg [`DATA_WIDTH] result;
 reg [`ADDR_WIDTH] pc_next;
 reg if_jump;
 
+integer i;
+
 always @(posedge clk) begin
-   if (rst) begin
+   if (rst || mispredict) begin
       enable_cdb_rs <= 0;
       cdb_rs_rob_id <= 0;
       cdb_rs_value <= 0;
-      for (integer i = 0; i < `RS_SIZE; ++i) begin
+      for (i = 0; i < `RS_SIZE; i = i + 1) begin
          busy[i] <= 0;
       end
    end
@@ -144,28 +159,28 @@ always @(*) begin
          result = pc[ready] + 4;
       end
       `BEQ       : begin           // Branch if Equal
-         pc_next = pc[ready] + (Vj[ready] == Vk[ready]) ? imm[ready] : 4;
+         pc_next = pc[ready] + ((Vj[ready] == Vk[ready]) ? imm[ready] : 4);
          if_jump = Vj[ready] == Vk[ready];
       end
       `BNE       : begin           // Branch if Not Equal
-         pc_next = pc[ready] + (Vj[ready] == Vk[ready]) ? imm[ready] : 4;
+         pc_next = pc[ready] + ((Vj[ready] != Vk[ready]) ? imm[ready] : 4);
          if_jump = Vj[ready] != Vk[ready];
       end
       `BLT       : begin           // Branch if Less Than
-         pc_next = pc[ready] + (Vj[ready] == Vk[ready]) ? imm[ready] : 4;
-         if_jump = $signed(Vj[ready]) <= $signed(Vk[ready]);        
+         pc_next = pc[ready] + (($signed(Vj[ready]) < $signed(Vk[ready])) ? imm[ready] : 4);
+         if_jump = $signed(Vj[ready]) < $signed(Vk[ready]);        
       end
       `BGE       : begin           // Branch if Greater Than or Equal
-         pc_next = pc[ready] + (Vj[ready] == Vk[ready]) ? imm[ready] : 4;
+         pc_next = pc[ready] + ($signed(Vj[ready]) >= $signed(Vk[ready]) ? imm[ready] : 4);
          if_jump = $signed(Vj[ready]) >= $signed(Vk[ready]);
       end
       `BLTU      : begin           // Branch if Less Than, Unsigned
-         pc_next = pc[ready] + (Vj[ready] == Vk[ready]) ? imm[ready] : 4;
+         pc_next = pc[ready] + ((Vj[ready] < Vk[ready]) ? imm[ready] : 4);
          if_jump = Vj[ready] < Vk[ready];
       end
       `BGEU      : begin           // Branch if Greater Than or Equal, Unsigned
-         pc_next = pc[ready] + (Vj[ready] == Vk[ready]) ? imm[ready] : 4;
-         if_jump = Vj[ready] >= Vk[ready];         
+         pc_next = pc[ready] + ((Vj[ready] >= Vk[ready]) ? imm[ready] : 4);
+         if_jump = Vj[ready] >= Vk[ready];
       end
       `ADDI      : begin           // Add Immediate
          result = Vj[ready] + imm[ready];
