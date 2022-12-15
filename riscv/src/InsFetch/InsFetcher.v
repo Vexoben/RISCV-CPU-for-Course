@@ -63,10 +63,10 @@ integer i, j;
 
 integer clk_cnt = 0;
 
-always @(pc) begin
-   $display("time: ", clk_cnt);
-   $display("pc: %h", pc);
-end
+// always @(pc) begin
+//    $display("time: ", clk_cnt);
+//    $display("pc: %h", pc);
+// end
 
 
 always @(posedge clk) begin

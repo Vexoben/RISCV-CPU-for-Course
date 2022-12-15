@@ -58,7 +58,7 @@ always @(posedge clk) begin
             enable_to_if <= 0;
             work_statu = read_or_write ? WRITE_DATA : READ_DATA;
             data_to_ram <= 0;
-            addr_to_ram <= addr_from_lsb;
+            if (read_or_write == 0) addr_to_ram <= addr_from_lsb;
             remain_step <= 5;
             last_response <= 1;
          end
@@ -171,6 +171,7 @@ always @(posedge clk) begin
                end
                4: begin
                   signal_to_ram <= 1;
+                  addr_to_ram <= addr_from_lsb;
                   data_to_ram <= data_from_lsb[7:0];
                   if (width_from_lsb == 1) begin
                      ok_to_lsb <= 1;

@@ -39,12 +39,12 @@ assign Vk_to_dsp = rs2_from_dsp == `REG_NUMBER || rs2_from_dsp == 0 ? 0 : mispre
 
 integer i;
 
-always @(V[0], V[1], V[2], V[3], V[4], V[5], V[6], V[7], V[8], V[9], V[10], V[11], V[12], V[13], V[14], V[15], V[16], V[17], V[18], V[19], V[20], V[21], V[22], V[23], V[24], V[25], V[26], V[27], V[28], V[29], V[30], V[31]) begin
-   for (i = 0; i < `REG_NUMBER; i = i + 1) begin
-      $display("reg%d: %d", i, V[i]);
-   end
-   $display("--------------------------");
-end
+// always @(V[0], V[1], V[2], V[3], V[4], V[5], V[6], V[7], V[8], V[9], V[10], V[11], V[12], V[13], V[14], V[15], V[16], V[17], V[18], V[19], V[20], V[21], V[22], V[23], V[24], V[25], V[26], V[27], V[28], V[29], V[30], V[31]) begin
+//    for (i = 0; i < `REG_NUMBER; i = i + 1) begin
+//       $display("reg%d: %d", i, V[i]);
+//    end
+//    $display("--------------------------");
+// end
 
 always @(posedge clk) begin
    if (rst) begin
