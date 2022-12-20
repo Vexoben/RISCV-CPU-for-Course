@@ -43,6 +43,7 @@ always @(posedge clk) begin
       work_statu <= STALL;
       remain_step <= 7;
       data_to_ram <= 0;
+      addr_to_ram <= 0;
       signal_to_ram <= 0;
       enable_to_if <= 0;
       ok_to_lsb <= 0;
@@ -88,6 +89,7 @@ always @(posedge clk) begin
                   remain_step <= 2;
                end 
                2: begin
+                  addr_to_ram <= 0;
                   ins_to_if[23:16] <= data_from_ram;
                   remain_step <= 1;
                end 
@@ -113,41 +115,51 @@ always @(posedge clk) begin
          if (enable_from_lsb && read_or_write == 0) begin
             case (remain_step)
                5: begin
+                  if (width_from_lsb == 1) begin
+                     addr_to_ram <= 0;   
+                  end
+                  else addr_to_ram <= addr_to_ram + 1;
                   remain_step <= 4;
-                  addr_to_ram <= addr_to_ram + 1;
                end
                4: begin
                   signal_to_ram <= 0;
                   data_to_lsb[7:0] <= data_from_ram;
-                  addr_to_ram <= addr_to_ram + 1;
                   if (width_from_lsb == 1) begin
                      ok_to_lsb <= 1;
                      remain_step <= 0;
                   end
                   else remain_step <= 3;
+                  if (width_from_lsb == 2) begin
+                     addr_to_ram <= 0;
+                  end
+                  else addr_to_ram <= addr_to_ram + 1;
                end 
                3: begin
                   data_to_lsb[15:8] <= data_from_ram;
-                  addr_to_ram <= addr_to_ram + 1;
                   if (width_from_lsb == 2) begin
                      ok_to_lsb <= 1;
                      remain_step <= 0;
                   end
                   else remain_step <= 2;
+                  if (width_from_lsb == 3) begin
+                     addr_to_ram <= 0;
+                  end
+                  else addr_to_ram <= addr_to_ram + 1;
                end 
                2: begin
                   data_to_lsb[23:16] <= data_from_ram;
-                  addr_to_ram <= addr_to_ram + 1;
                   if (width_from_lsb == 3) begin
                      ok_to_lsb <= 1;
                      remain_step <= 0;
                   end
                   else remain_step <= 1;
+                  if (width_from_lsb == 4) begin
+                     addr_to_ram <= 0;
+                  end
                end 
                1: begin
                   ok_to_lsb <= 1;
                   data_to_lsb[31:24] <= data_from_ram;
-                  addr_to_ram <= addr_to_ram + 1;
                   remain_step <= 0;
                end
                0: begin
@@ -206,7 +218,7 @@ always @(posedge clk) begin
                0: begin
                   remain_step <= 7;
                   ok_to_lsb <= 0;
-                  if (addr_to_ram != 32'h30004) signal_to_ram <= 0;
+                  signal_to_ram <= 0;
                   work_statu <= STALL;
                end
             endcase            

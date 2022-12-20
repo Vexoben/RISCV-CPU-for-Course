@@ -62,6 +62,7 @@ reg [`EX_REG_NUMBER_WIDTH] rd[`REG_SIZE_ARR];
 reg [`ROB_SIZE_ARR] predict_jump, actu_jump;
 reg [`ROB_SIZE_ARR] busy, ready;
 reg [`DATA_WIDTH] result[`ROB_SIZE_ARR];
+reg [`ROB_SIZE_ARR] committed;
 
 reg [`ROB_ID_TYPE] head, tail, size;
 reg push, pop;
@@ -78,6 +79,8 @@ wire head_is_store = busy[head] && (type[head] == `SB || type[head] == `SH || ty
 wire head_is_branch = busy[head] && (type[head] == `BEQ || type[head] == `BNE || type[head] == `BLT || type[head] == `BGE || type[head] == `BLTU || type[head] == `BGEU);
 wire head_maybe_change_reg = busy[head] && (!head_is_branch && !head_is_store);
 wire head_is_jump = busy[head] && (head_is_branch || type[head] == `JAL || type[head] == `JALR);
+
+integer total_pred, right_pred;
 
 integer i;
 
@@ -105,6 +108,7 @@ always @(posedge clk) begin
          rd[i] <= 0; 
          busy[i] <= 0; ready[i] <= 0;
          result[i] <= 0;
+         committed[i] <= 0;
       end
    end
    else if (!rdy) begin
@@ -124,6 +128,7 @@ always @(posedge clk) begin
          predict_jump[tail] <= predict_jump_from_dsp;
          actu_jump[tail] <= 0;
          result[tail] <= 0;
+         committed[tail] <= 0;
       end
       else push <= 0;
       if (enable_cdb_lsb && busy[cdb_lsb_rob_id]) begin
@@ -136,7 +141,19 @@ always @(posedge clk) begin
          actu_jump[cdb_rs_rob_id] <= cdb_rs_jump;
          pc_next[cdb_rs_rob_id] <= cdb_rs_pc_next;
       end
-      if (ready[head] || head_is_store) begin   // commit
+      if (!ready[head] && head_is_load) begin
+         if (!committed[head]) begin
+            pop <= 0;
+            commit_signal <= 1;
+            enable_to_reg <= 0;
+            enable_to_if <= 0;
+            enable_to_predictor <= 0;
+            committed_from_rob <= head;              
+            committed[head] <= 1;
+         end
+         else commit_signal <= 0;
+      end
+      else if (ready[head] || head_is_store) begin   // commit
          head <= head == (`ROB_SIZE - 1) ? 0 : head + 1;
          pop <= 1;
          enable_to_reg <= head_maybe_change_reg;
@@ -155,11 +172,13 @@ always @(posedge clk) begin
             enable_to_predictor <= 1;
             if_jump_to_predictor <= actu_jump[head];
             code_to_predictor <= code[head];
+            total_pred <= total_pred + 1;
 
             // mispredict
             if (predict_jump[head] != actu_jump[head]) begin
                mispredict <= 1;
             end
+            else right_pred <= right_pred + 1;
          end
          else begin
             enable_to_predictor <= 0;

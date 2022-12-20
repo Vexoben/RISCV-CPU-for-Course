@@ -68,7 +68,8 @@ STALL = 0,
 RECIEVE = 1,
 READ_DATA = 2,
 WRITE_DATA_WAIT_ROB = 3,
-WRITE_DATA_MEM = 4;
+WRITE_DATA_MEM = 4,
+READ_DATA_WAIT_ROB = 5;
 reg [2:0] work_statu;
 
 reg[`LSB_SIZE_ARR] ready;
@@ -128,8 +129,8 @@ always @(posedge clk) begin
       if (work_statu == STALL) begin
          pop <= 0;
          if (head_is_load && ready[head]) begin
-            work_statu <= READ_DATA;
-            enable_to_memctrl <= 1;
+            work_statu <= committed[head] ? READ_DATA : READ_DATA_WAIT_ROB;
+            enable_to_memctrl <= committed[head];
             read_or_write_to_memctrl <= 0;
             addr_to_memctrl <= Vj[head] + imm[head];
             // $display("load: %d, width = %d", Vj[head] + imm[head], (type[head] == `LB || type[head] == `LBU) ? 1 : type[head] == `LW ? 4 : 2);
@@ -171,6 +172,13 @@ always @(posedge clk) begin
             endcase
          end
       end
+      else if (work_statu == READ_DATA_WAIT_ROB) begin
+         pop <= 0;
+         if (committed[head]) begin
+            work_statu <= READ_DATA;
+            enable_to_memctrl <= 1;
+         end
+      end
       else if (work_statu == READ_DATA) begin
          if (ok_from_memctrl) begin
             pop <= 1;
@@ -187,8 +195,9 @@ always @(posedge clk) begin
                `LHU: cdb_lsb_value <= {16'b0, data_from_memctrl[15:0]};
             endcase
             busy[head] <= 0;
+            committed[head] <= 0;
             head <= (head + 1 == `LSB_SIZE) ? 0 : head + 1;
-            committed_tail <= (head + 1 == `LSB_SIZE) ? 0 : head + 1;
+            // committed_tail <= (head + 1 == `LSB_SIZE) ? 0 : head + 1;
          end
          else pop <= 0;
       end
@@ -243,10 +252,13 @@ always @(posedge clk) begin
       if (commit_signal) begin
          for (i = 0; i < `LSB_SIZE; i = i + 1) begin
             if (rob_id[i] == committed_from_rob && rob_id[i] != `NON_DEPENDENT) begin
-               committed[i] = 1;
+               if (committed[i] == 0) begin
+                  committed[i] = 1;
+                  committed_tail <= (committed_tail + 1 == `LSB_SIZE) ? 0 : committed_tail + 1;
+               end
             end
          end
-         committed_tail <= (committed_tail + 1 == `LSB_SIZE) ? 0 : committed_tail + 1;
+         
       end
    end
 end
