@@ -1,14 +1,14 @@
 // RISCV32I CPU top module
 // port modification allowed for debugging purposes
-`include "RegFile.v"
-`include "MemCtrl.v"
-`include "InsFetch/InsFetcher.v"
-`include "InsFetch/Predictor.v"
-`include "Issue/Dispatcher.v"
-`include "Issue/Decoder.v"
-`include "Execute/RS.v"
-`include "Execute/LSB.v"
-`include "ROB.v"
+// `include "RegFile.v"
+// `include "MemCtrl.v"
+// `include "InsFetch/InsFetcher.v"
+// `include "InsFetch/Predictor.v"
+// `include "Issue/Dispatcher.v"
+// `include "Issue/Decoder.v"
+// `include "Execute/RS.v"
+// `include "Execute/LSB.v"
+// `include "ROB.v"
 
 module cpu(
    input  wire                 clk_in,			// system clock signal
