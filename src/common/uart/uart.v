@@ -29,9 +29,9 @@
 // `include "/mnt/f/github/RISCV-CPU-for-Course/riscv/src/common/uart/uart_tx.v"
 // `include "/mnt/f/github/RISCV-CPU-for-Course/riscv/src/common/uart/uart_baud_clk.v"
 
-`include "./uart_rx.v"
-`include "./uart_tx.v"
-`include "./uart_baud_clk.v"
+// `include "./uart_rx.v"
+// `include "./uart_tx.v"
+// `include "./uart_baud_clk.v"
 
 
 module uart
