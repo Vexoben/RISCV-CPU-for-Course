@@ -90,7 +90,8 @@ initial begin
   for (i=0;i<2**ADDR_WIDTH;i=i+1) begin
     ram[i] = 0;
   end
-  $readmemh("/mnt/f/github/RISCV-CPU-for-Course/riscv/src/common/block_ram/testcases/qsort.data", ram); // add test.data to vivado project or specify a valid file path
+  // $readmemh("/mnt/f/github/RISCV-CPU-for-Course/riscv/src/common/block_ram/testcases/qsort.data", ram); // add test.data to vivado project or specify a valid file path
+  $readmemh("test.data", ram);
 end
 
 endmodule
