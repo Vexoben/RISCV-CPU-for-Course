@@ -75,7 +75,7 @@ always @(posedge clk) begin
       end
    end
 end
-
+/*
 wire [`ADDR_WIDTH] V0 = V[0];
 wire [`ADDR_WIDTH] V1 = V[1];
 wire [`ADDR_WIDTH] V2 = V[2];
@@ -109,5 +109,5 @@ wire [`ADDR_WIDTH] Q12 = Q[12];
 wire [`ADDR_WIDTH] Q13 = Q[13];
 wire [`ADDR_WIDTH] Q14 = Q[14];
 wire [`ADDR_WIDTH] Q15 = Q[15];
-
+*/
 endmodule

@@ -11,24 +11,24 @@
 
 // cpu para
 // instruction cache parameters
-`define TAG_RANGE 17:10
-`define INDEX_RANGE 9:2
+`define TAG_RANGE 17:8
+`define INDEX_RANGE 7:2
 `define BLOCK_RANGE 1:0
 `define IC_BLOCK_SIZE 4
 `define IC_BLOCK_SIZE_ARR 3:0
-`define ICACHE_SIZE 256
-`define ICACHE_SIZE_ARR 255:0
+`define ICACHE_SIZE 64
+`define ICACHE_SIZE_ARR 63:0
 // rob parameters
-`define ROB_SIZE 16
-`define ROB_SIZE_ARR 15:0
-`define ROB_ID_TYPE 4:0
-`define NON_DEPENDENT 16
-`define RS_SIZE 16
-`define RS_SIZE_ARR 15:0
-`define RS_ID_TYPE 4:0
-`define LSB_SIZE 16
-`define LSB_SIZE_ARR 15:0
-`define LSB_ID_TYPE 4:0
+`define ROB_SIZE 8
+`define ROB_SIZE_ARR 7:0
+`define ROB_ID_TYPE 3:0
+`define NON_DEPENDENT 8
+`define RS_SIZE 8
+`define RS_SIZE_ARR 7:0
+`define RS_ID_TYPE 3:0
+`define LSB_SIZE 8
+`define LSB_SIZE_ARR 7:0
+`define LSB_ID_TYPE 3:0
 
 // ins number
 `define EMPTY_INS 6'd0

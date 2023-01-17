@@ -52,16 +52,13 @@ reg [`INS_WIDTH] datas[`ICACHE_SIZE_ARR][`IC_BLOCK_SIZE_ARR];
 // reg [`ADDR_WIDTH] pc_pred[`ICACHE_SIZE_ARR][`IC_BLOCK_SIZE_ARR];
 
 // pc
-reg mem_pc_new_valid;
-reg [`ADDR_WIDTH] pc, dsp_pc, mem_pc, mem_pc_new;
+reg [`ADDR_WIDTH] pc, dsp_pc, mem_pc;
 
 wire hit = enable_from_dispatcher 
             && tags[dsp_pc[`INDEX_RANGE]][dsp_pc[`BLOCK_RANGE]] == dsp_pc[`TAG_RANGE] 
             && valid[dsp_pc[`INDEX_RANGE]][dsp_pc[`BLOCK_RANGE]] == 1;
 
 integer i, j;
-
-integer clk_cnt = 0;
 
 // always @(pc) begin
 //    $display("time: ", clk_cnt);
@@ -70,7 +67,6 @@ integer clk_cnt = 0;
 
 
 always @(posedge clk) begin
-   clk_cnt <= clk_cnt + 1;       // debug demo
    // $display("---------------------");
    // $display(enable_from_dispatcher);
    // $display(tags[dsp_pc[`INDEX_RANGE]][dsp_pc[`BLOCK_RANGE]]);
@@ -83,8 +79,6 @@ always @(posedge clk) begin
       pc <= 0;
       dsp_pc <= 0;
       mem_pc <= 0;
-      mem_pc_new_valid <= 0;
-      mem_pc_new <= 0;
       pc_to_predictor <= 0;
       code_to_predictor <= 0;
       enable_to_memctrl <= 0;
@@ -116,8 +110,6 @@ always @(posedge clk) begin
             dsp_pc <= pc_next;
          end                                
          else if (work_statu == INS_FETCH_A || work_statu == INS_FETCH_B || work_statu == WAIT_PREDICT_A || work_statu == WAIT_PREDICT_B) begin
-            mem_pc_new_valid <= 1;          // case2, is fetching ins from memctrl: wait for current ins_fetch.
-            mem_pc_new <= pc_next;          // record new pc_next(sent from rob), update mem_pc to mem_pc_new after finishing ins_fetch
             dsp_pc <= pc_next;
             mispredict_tag <= 1;
             // $display("mispredict");
@@ -138,7 +130,6 @@ always @(posedge clk) begin
                   enable_to_memctrl <= 1;
                   addr_to_memctrl <= pc;
                   mem_pc <= dsp_pc;
-                  mem_pc_new_valid <= 0;
                end
                else begin
                   work_statu <= WAIT_PREDICT_A;

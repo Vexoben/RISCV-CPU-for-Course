@@ -253,7 +253,7 @@ always @(posedge clk) begin
          for (i = 0; i < `LSB_SIZE; i = i + 1) begin
             if (rob_id[i] == committed_from_rob && rob_id[i] != `NON_DEPENDENT) begin
                if (committed[i] == 0) begin
-                  committed[i] = 1;
+                  committed[i] <= 1;
                   committed_tail <= (committed_tail + 1 == `LSB_SIZE) ? 0 : committed_tail + 1;
                end
             end
@@ -262,41 +262,6 @@ always @(posedge clk) begin
       end
    end
 end
-
-wire [`ADDR_WIDTH] Qj0 = Qj[0];
-wire [`ADDR_WIDTH] Qj1 = Qj[1];
-wire [`ADDR_WIDTH] Qj2 = Qj[2];
-wire [`ADDR_WIDTH] Qj3 = Qj[3];
-wire [`ADDR_WIDTH] Qj4 = Qj[4];
-wire [`ADDR_WIDTH] Qj5 = Qj[5];
-wire [`ADDR_WIDTH] Qj6 = Qj[6];
-wire [`ADDR_WIDTH] Qj7 = Qj[7];
-wire [`ADDR_WIDTH] Qj8 = Qj[8];
-wire [`ADDR_WIDTH] Qj9 = Qj[9];
-wire [`ADDR_WIDTH] Qj10 = Qj[10];
-wire [`ADDR_WIDTH] Qj11 = Qj[11];
-wire [`ADDR_WIDTH] Qj12 = Qj[12];
-wire [`ADDR_WIDTH] Qj13 = Qj[13];
-wire [`ADDR_WIDTH] Qj14 = Qj[14];
-wire [`ADDR_WIDTH] Qj15 = Qj[15];
-
-wire [`ADDR_WIDTH] Qk0 = Qk[0];
-wire [`ADDR_WIDTH] Qk1 = Qk[1];
-wire [`ADDR_WIDTH] Qk2 = Qk[2];
-wire [`ADDR_WIDTH] Qk3 = Qk[3];
-wire [`ADDR_WIDTH] Qk4 = Qk[4];
-wire [`ADDR_WIDTH] Qk5 = Qk[5];
-wire [`ADDR_WIDTH] Qk6 = Qk[6];
-wire [`ADDR_WIDTH] Qk7 = Qk[7];
-wire [`ADDR_WIDTH] Qk8 = Qk[8];
-wire [`ADDR_WIDTH] Qk9 = Qk[9];
-wire [`ADDR_WIDTH] Qk10 = Qk[10];
-wire [`ADDR_WIDTH] Qk11 = Qk[11];
-wire [`ADDR_WIDTH] Qk12 = Qk[12];
-wire [`ADDR_WIDTH] Qk13 = Qk[13];
-wire [`ADDR_WIDTH] Qk14 = Qk[14];
-wire [`ADDR_WIDTH] Qk15 = Qk[15];
-
 wire ready0 = ready[0];
 
 endmodule

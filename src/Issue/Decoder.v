@@ -2,7 +2,6 @@
 
 module Decoder(
    input wire [`INS_WIDTH] code,
-   input wire [`ADDR_WIDTH] pc,
    output reg [`OPE_WIDTH] ins_type,
    output reg [`EX_REG_NUMBER_WIDTH] ins_rd, ins_rs1, ins_rs2,    // reg destination, reg source1, reg source2
    output reg [`DATA_WIDTH] ins_imm                            // ins immediate
@@ -19,6 +18,7 @@ always @(*) begin
    ins_rd = (code >> 7) & 12'h1F;
    ins_rs1 = code >> 15 & 12'h1F;
    ins_rs2 = code >> 20 & 12'h1F;
+   ins_imm = 0;
    case (code & 12'h7F)
       12'h37: begin
          ins_type = `LUI;

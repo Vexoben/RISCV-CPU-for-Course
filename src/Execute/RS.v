@@ -61,7 +61,7 @@ assign real_Qj = (enable_cdb_rs && cdb_rs_rob_id == Qj_from_dsp) ? `NON_DEPENDEN
 assign real_Qk = (enable_cdb_rs && cdb_rs_rob_id == Qk_from_dsp) ? `NON_DEPENDENT : (enable_cdb_lsb && cdb_lsb_rob_id == Qk_from_dsp) ? `NON_DEPENDENT : Qk_from_dsp;
 assign real_Vj = (enable_cdb_rs && cdb_rs_rob_id == Qj_from_dsp) ? cdb_rs_value : (enable_cdb_lsb && cdb_lsb_rob_id == Qj_from_dsp) ? cdb_lsb_value : Vj_from_dsp;
 assign real_Vk = (enable_cdb_rs && cdb_rs_rob_id == Qk_from_dsp) ? cdb_rs_value : (enable_cdb_lsb && cdb_lsb_rob_id == Qk_from_dsp) ? cdb_lsb_value : Vk_from_dsp;
-
+/*
 assign free = !busy[0] ? 0 : !busy[1] ? 1 : !busy[2] ? 2 : !busy[3] ? 3 :
               !busy[4] ? 4 : !busy[5] ? 5 : !busy[6] ? 6 : !busy[7] ? 7 :
               !busy[8] ? 8 : !busy[9] ? 9 : !busy[10] ? 10 : !busy[11] ? 11 :
@@ -86,9 +86,37 @@ assign ready = ready_Q[0] ? 0 : ready_Q[1] ? 1 : ready_Q[2] ? 2 : ready_Q[3] ? 3
                ready_Q[4] ? 4 : ready_Q[5] ? 5 : ready_Q[6] ? 6 : ready_Q[7] ? 7 :
                ready_Q[8] ? 8 : ready_Q[9] ? 9 : ready_Q[10] ? 10 : ready_Q[11] ? 11 :
                ready_Q[12] ? 12 : ready_Q[13] ? 13 : ready_Q[14] ? 14 : ready_Q[15] ? 15 : `RS_SIZE;
-
 assign size = busy[0] + busy[1] + busy[2] + busy[3] + busy[4] + busy[5] + busy[6] + busy[7] 
                + busy[8] + busy[9] + busy[10] + busy[11] + busy[12] + busy[13] + busy[14] + busy[15];
+*/
+
+assign free = !busy[0] ? 0 : !busy[1] ? 1 : !busy[2] ? 2 : !busy[3] ? 3 :
+              !busy[4] ? 4 : !busy[5] ? 5 : !busy[6] ? 6 : !busy[7] ? 7 : `RS_SIZE;
+assign ready_Q[0] = Qj[0] == `NON_DEPENDENT && Qk[0] == `NON_DEPENDENT && busy[0];
+assign ready_Q[1] = Qj[1] == `NON_DEPENDENT && Qk[1] == `NON_DEPENDENT && busy[1];
+assign ready_Q[2] = Qj[2] == `NON_DEPENDENT && Qk[2] == `NON_DEPENDENT && busy[2];
+assign ready_Q[3] = Qj[3] == `NON_DEPENDENT && Qk[3] == `NON_DEPENDENT && busy[3];
+assign ready_Q[4] = Qj[4] == `NON_DEPENDENT && Qk[4] == `NON_DEPENDENT && busy[4];
+assign ready_Q[5] = Qj[5] == `NON_DEPENDENT && Qk[5] == `NON_DEPENDENT && busy[5];
+assign ready_Q[6] = Qj[6] == `NON_DEPENDENT && Qk[6] == `NON_DEPENDENT && busy[6];
+assign ready_Q[7] = Qj[7] == `NON_DEPENDENT && Qk[7] == `NON_DEPENDENT && busy[7];
+assign ready = ready_Q[0] ? 0 : ready_Q[1] ? 1 : ready_Q[2] ? 2 : ready_Q[3] ? 3 :
+               ready_Q[4] ? 4 : ready_Q[5] ? 5 : ready_Q[6] ? 6 : ready_Q[7] ? 7 : `RS_SIZE;
+
+assign size = busy[0] + busy[1] + busy[2] + busy[3] + busy[4] + busy[5] + busy[6] + busy[7];
+
+/*
+assign free = !busy[0] ? 0 : !busy[1] ? 1 : !busy[2] ? 2 : !busy[3] ? 3 : `RS_SIZE;
+
+assign ready_Q[0] = Qj[0] == `NON_DEPENDENT && Qk[0] == `NON_DEPENDENT && busy[0];
+assign ready_Q[1] = Qj[1] == `NON_DEPENDENT && Qk[1] == `NON_DEPENDENT && busy[1];
+assign ready_Q[2] = Qj[2] == `NON_DEPENDENT && Qk[2] == `NON_DEPENDENT && busy[2];
+assign ready_Q[3] = Qj[3] == `NON_DEPENDENT && Qk[3] == `NON_DEPENDENT && busy[3];
+assign ready = ready_Q[0] ? 0 : ready_Q[1] ? 1 : ready_Q[2] ? 2 : ready_Q[3] ? 3 : `RS_SIZE;
+
+assign size = busy[0] + busy[1] + busy[2] + busy[3];
+*/
+
 assign full_rs = size + 1 >= `RS_SIZE;
 
 reg [`DATA_WIDTH] result;
@@ -267,41 +295,4 @@ always @(*) begin
       end
    endcase
 end
-
-// debug wire
-
-wire [`ADDR_WIDTH] Qj0 = Qj[0];
-wire [`ADDR_WIDTH] Qj1 = Qj[1];
-wire [`ADDR_WIDTH] Qj2 = Qj[2];
-wire [`ADDR_WIDTH] Qj3 = Qj[3];
-wire [`ADDR_WIDTH] Qj4 = Qj[4];
-wire [`ADDR_WIDTH] Qj5 = Qj[5];
-wire [`ADDR_WIDTH] Qj6 = Qj[6];
-wire [`ADDR_WIDTH] Qj7 = Qj[7];
-wire [`ADDR_WIDTH] Qj8 = Qj[8];
-wire [`ADDR_WIDTH] Qj9 = Qj[9];
-wire [`ADDR_WIDTH] Qj10 = Qj[10];
-wire [`ADDR_WIDTH] Qj11 = Qj[11];
-wire [`ADDR_WIDTH] Qj12 = Qj[12];
-wire [`ADDR_WIDTH] Qj13 = Qj[13];
-wire [`ADDR_WIDTH] Qj14 = Qj[14];
-wire [`ADDR_WIDTH] Qj15 = Qj[15];
-
-wire [`ADDR_WIDTH] Vj0 = Vj[0];
-wire [`ADDR_WIDTH] Vj1 = Vj[1];
-wire [`ADDR_WIDTH] Vj2 = Vj[2];
-wire [`ADDR_WIDTH] Vj3 = Vj[3];
-wire [`ADDR_WIDTH] Vj4 = Vj[4];
-wire [`ADDR_WIDTH] Vj5 = Vj[5];
-wire [`ADDR_WIDTH] Vj6 = Vj[6];
-wire [`ADDR_WIDTH] Vj7 = Vj[7];
-wire [`ADDR_WIDTH] Vj8 = Vj[8];
-wire [`ADDR_WIDTH] Vj9 = Vj[9];
-wire [`ADDR_WIDTH] Vj10 = Vj[10];
-wire [`ADDR_WIDTH] Vj11 = Vj[11];
-wire [`ADDR_WIDTH] Vj12 = Vj[12];
-wire [`ADDR_WIDTH] Vj13 = Vj[13];
-wire [`ADDR_WIDTH] Vj14 = Vj[14];
-wire [`ADDR_WIDTH] Vj15 = Vj[15];
-
 endmodule

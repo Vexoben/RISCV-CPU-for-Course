@@ -16,7 +16,6 @@ module Dispatcher(
 
    // interact with decoder                           // combinational circuit
    output wire [`INS_WIDTH] code_to_decoder,
-   output wire [`ADDR_WIDTH] pc_to_decoder,
    input wire [`OPE_WIDTH] ins_type,
    input wire [`EX_REG_NUMBER_WIDTH] ins_rd, ins_rs1, ins_rs2,  // reg destination, reg source1, reg source2
    input wire [`DATA_WIDTH] ins_imm,
@@ -56,7 +55,6 @@ module Dispatcher(
    output reg predict_jump_to_rob,
    output reg [`ADDR_WIDTH] pc_to_rob,
    output reg [`OPE_WIDTH] type_to_rob,
-   output reg [`ADDR_WIDTH] pred_pc_to_rob,
    output reg [`EX_REG_NUMBER_WIDTH] rd_to_rob,
    output reg [`INS_WIDTH] code_to_rob,
 
@@ -109,7 +107,6 @@ assign Qk_to_rob = Qk_from_reg;
 assign rs1_to_reg = ins_rs1;
 assign rs2_to_reg = ins_rs2;
 assign code_to_decoder = ins_from_if;
-assign pc_to_decoder = pc_from_if;
 
 parameter
 STALL = 0,
@@ -156,7 +153,6 @@ always @(posedge clk) begin
                // rob
                enable_to_rob <= 1;
                predict_jump_to_rob <= predict_jump_from_if;
-               pred_pc_to_rob <= pred_pc_from_if;
                rd_to_rob <= ins_rd;
                type_to_rob <= ins_type;
                code_to_rob <= ins_from_if;

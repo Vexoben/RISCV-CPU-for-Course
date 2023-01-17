@@ -17,11 +17,13 @@ module Predictor (
    input wire [`INS_WIDTH] code
 );
 
+parameter SIZE = 9;
+
 wire is_JALR = ins_cur[6:0] == 7'b1100111;
 wire is_JAL = ins_cur[6:0] == 7'b1101111;
 wire is_branch = ins_cur[6:0] == 7'b1100011;
-wire [11:0] hash = (ins_cur >> 9 & 32'h1FF) | ((ins_cur >> 20 & 32'h7) << 9);
-wire [11:0] hash_upd = (code >> 9 & 32'h1FF) | ((code >> 20 & 32'h7) << 9);
+wire [SIZE - 1 : 0] hash = ins_cur[5 + SIZE : 6];
+wire [SIZE - 1 : 0] hash_upd = code[5 + SIZE : 6];
 wire [`DATA_WIDTH] imm;
 assign imm = is_JAL ? {{12{ins_cur[31]}}, ins_cur[19:12], ins_cur[20], ins_cur[30:21], 1'b0} : {{20{ins_cur[31]}}, ins_cur[7], ins_cur[30:25], ins_cur[11:8], 1'b0};
 
@@ -31,7 +33,7 @@ assign imm = is_JAL ? {{12{ins_cur[31]}}, ins_cur[19:12], ins_cur[20], ins_cur[3
 // assign pc_pred = is_JAL || is_branch ? pc_cur + imm : pc_cur + 4;
 // assign predict_jump_to_dispatcher = is_JAL || is_branch ? 1 : 0;
 
-reg [1:0] bht[4095:0];
+reg [1:0] bht[2 ** SIZE - 1 : 0];
 
 integer i;
 
@@ -40,7 +42,7 @@ assign pc_pred = is_JALR ? pc_cur + 4 : predict_jump_to_dispatcher ? pc_cur + im
 
 always @(posedge clk) begin
    if (rst) begin
-      for (i = 0; i < 4096; i = i + 1) begin
+      for (i = 0; i < 2 ** SIZE; i = i + 1) begin
          bht[i] = 1;
       end
    end

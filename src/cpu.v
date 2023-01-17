@@ -1,14 +1,15 @@
 // RISCV32I CPU top module
 // port modification allowed for debugging purposes
-`include "RegFile.v"
-`include "MemCtrl.v"
-`include "InsFetch/InsFetcher.v"
-`include "InsFetch/Predictor.v"
-`include "Issue/Dispatcher.v"
-`include "Issue/Decoder.v"
-`include "Execute/RS.v"
-`include "Execute/LSB.v"
-`include "ROB.v"
+`include "define.v"
+// `include "RegFile.v"
+// `include "MemCtrl.v"
+// `include "InsFetch/InsFetcher.v"
+// `include "InsFetch/Predictor.v"
+// `include "Issue/Dispatcher.v"
+// `include "Issue/Decoder.v"
+// `include "Execute/RS.v"
+// `include "Execute/LSB.v"
+// `include "ROB.v"
 
 module cpu(
    input  wire                 clk_in,			// system clock signal
@@ -84,7 +85,6 @@ wire [`INS_WIDTH] code_rob_to_pd;
 
 // Dispatcher
 wire [`INS_WIDTH] code_dsp_to_dc;
-wire [`ADDR_WIDTH] pc_dsp_to_dc;
 wire [`OPE_WIDTH] ins_type_dc_to_dsp;
 wire [`EX_REG_NUMBER_WIDTH] ins_rd_dc_to_dsp, ins_rs1_dc_to_dsp, ins_rs2_dc_to_dsp;
 wire [`DATA_WIDTH] ins_imm_dc_to_dsp;
@@ -122,7 +122,6 @@ wire enable_dsp_to_rob;
 wire predict_jump_dsp_to_rob;
 wire [`ADDR_WIDTH] pc_dsp_to_rob;
 wire [`OPE_WIDTH] type_dsp_to_rob;
-wire [`ADDR_WIDTH] pred_pc_dsp_to_rob;
 wire [`EX_REG_NUMBER_WIDTH] rd_dsp_to_rob;
 wire [`INS_WIDTH] code_dsp_to_rob;
 
@@ -247,7 +246,6 @@ Dispatcher dispatchar(
 
    // decoder
    .code_to_decoder(code_dsp_to_dc),
-   .pc_to_decoder(pc_dsp_to_dc),
    .ins_type(ins_type_dc_to_dsp),
    .ins_rd(ins_rd_dc_to_dsp),
    .ins_rs1(ins_rs1_dc_to_dsp),
@@ -299,7 +297,6 @@ Dispatcher dispatchar(
    .predict_jump_to_rob(predict_jump_dsp_to_rob),
    .pc_to_rob(pc_dsp_to_rob),
    .type_to_rob(type_dsp_to_rob),
-   .pred_pc_to_rob(pred_pc_dsp_to_rob),
    .rd_to_rob(rd_dsp_to_rob),
    .code_to_rob(code_dsp_to_rob),
 
@@ -317,7 +314,6 @@ Dispatcher dispatchar(
 
 Decoder decoder(
    .code(code_dsp_to_dc),
-   .pc(pc_dsp_to_dc),
    .ins_type(ins_type_dc_to_dsp),
    .ins_rd(ins_rd_dc_to_dsp),
    .ins_rs1(ins_rs1_dc_to_dsp),
@@ -409,7 +405,6 @@ ROB rob(
    .predict_jump_from_dsp(predict_jump_dsp_to_rob),
    .pc_from_dsp(pc_dsp_to_rob),
    .type_from_dsp(type_dsp_to_rob),
-   .pred_pc_from_dsp(pred_pc_dsp_to_rob),
    .rd_from_dsp(rd_dsp_to_rob),
    .code_from_dsp(code_dsp_to_rob),
 

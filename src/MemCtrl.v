@@ -50,7 +50,7 @@ always @(posedge clk) begin
       ins_to_if <= 0;
       last_response = 0;
    end
-   else if (!rdy) begin
+   else if (!rdy || uart_full_signal) begin
       // do nothing
    end
    else begin
@@ -175,7 +175,7 @@ always @(posedge clk) begin
             work_statu = STALL;
          end
       end
-      else if (work_statu == WRITE_DATA) begin
+      else if (work_statu == WRITE_DATA && !uart_full_signal) begin
          if (enable_from_lsb && read_or_write == 1) begin
             case (remain_step)
                5: begin
